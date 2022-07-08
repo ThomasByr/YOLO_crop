@@ -1,0 +1,126 @@
+#pragma once
+
+#include <algorithm>
+#include <cassert>
+#include <cctype>
+#include <cerrno>
+#include <chrono>
+#include <csignal>
+#include <cstring>
+#include <future>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include <dirent.h>
+#include <getopt.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#define __AUTHOR__ "ThomasByr"
+
+#define __VERSION_MAJOR__ 1
+#define __VERSION_MINOR__ 1
+#define __VERSION_PATCH__ 0
+
+#define TIMEOUT 3000
+
+#define RST "\x1b[m\x1b[0m"
+
+#define FG_RED "\x1b[0;31m"
+#define FG_GRN "\x1b[0;32m"
+#define FG_YEL "\x1b[0;33m"
+#define FG_BLU "\x1b[0;34m"
+#define FG_MAG "\x1b[0;35m"
+#define FG_CYN "\x1b[0;36m"
+#define FG_WHT "\x1b[0;37m"
+
+#define BG_BLU "\x1b[40m"
+#define BG_RED "\x1b[41m"
+#define BG_GRN "\x1b[42m"
+#define BG_ORA "\x1b[43m"
+#define BG_CYN1 "\x1b[44m"
+#define BG_YEL "\x1b[45m"
+#define BG_CYN2 "\x1b[46m"
+#define BG_WHT "\x1b[47m"
+
+#ifndef DEBUG
+
+#define std_debug(msg) (void)msg;
+#define assert_debug(cond) (void)(cond);
+
+#else
+
+#define std_debug(msg) log(msg, 0);
+#define assert_debug(cond) assert(cond);
+
+#endif
+
+#define chk(op)       \
+  do {                \
+    if ((op) == -1) { \
+      panic(#op);     \
+    }                 \
+  } while (0)
+
+#define chk_p(op)          \
+  do {                     \
+    if ((op) == nullptr) { \
+      panic(#op);          \
+    }                      \
+  } while (0)
+
+void panic [[noreturn]] (const std::string &msg);
+
+enum struct ImageType { png, jpg, bmp, unknown };
+
+ImageType get_img_type(const std::string &path);
+
+/**
+ * @brief implements repeat for a string
+ *
+ * @param str string
+ * @param n unsigned
+ * @return std::string - new string
+ */
+std::string repeat(std::string str, const unsigned n);
+
+/**
+ * @brief * operator for a string and an unsigned
+ *
+ * @param str string
+ * @param n unsigned
+ * @return std::string - new string
+ */
+std::string operator*(std::string str, const unsigned n);
+
+enum struct LogLevel { Debug = 0, Info = 1, Warn = 2, Error = 3 };
+
+/**
+ * @brief outputs a string to stdout on a given level
+ *
+ * @param msg message to output
+ * @param level level of output (0 = debug, 1 = info, 2 = warn, 3 = error)
+ */
+void log(const std::string &msg, const unsigned level = 0);
+/**
+ * @brief outputs a string to stdout on a given level
+ *
+ * @param msg message to output
+ * @param level level of output
+ */
+void log(const std::string &msg, const LogLevel level);
+
+/**
+ * @brief displays a progress bar
+ *
+ * @param progress progress in total number of steps
+ * @param total total number of steps
+ */
+void display_progress(const unsigned progress, const unsigned total);
