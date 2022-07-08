@@ -1,4 +1,4 @@
-# Fast Crop for Images
+# Fast Crop for Images around YOLO rectangles
 
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://docs.microsoft.com/en-us/windows/wsl/tutorials/gui-apps)
 [![GitHub license](https://img.shields.io/github/license/ThomasByr/crop_imgs)](https://github.com/ThomasByr/crop_imgs/blob/master/LICENSE)
