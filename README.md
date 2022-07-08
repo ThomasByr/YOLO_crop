@@ -6,8 +6,6 @@
 [![GitHub latest commit](https://badgen.net/github/last-commit/ThomasByr/crop_imgs)](https://gitHub.com/ThomasByr/crop_imgs/commit/)
 [![Maintenance](https://img.shields.io/badge/maintained%3F-yes-green.svg)](https://GitHub.com/ThomasByr/crop_imgs/graphs/commit-activity)
 
-[![Python application](https://github.com/ThomasByr/crop_imgs/actions/workflows/python-app.yml/badge.svg)](https://github.com/ThomasByr/crop_imgs/actions/workflows/python-app.yml)
-[![Pylint](https://github.com/ThomasByr/crop_imgs/actions/workflows/pylint.yml/badge.svg)](https://github.com/ThomasByr/crop_imgs/actions/workflows/pylint.yml)
 [![GitHub version](https://badge.fury.io/gh/ThomasByr%2Fcrop_imgs.svg)](https://github.com/ThomasByr/crop_imgs)
 [![Author](https://img.shields.io/badge/author-@ThomasByr-blue)](https://github.com/ThomasByr)
 
