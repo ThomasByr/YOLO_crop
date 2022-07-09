@@ -236,7 +236,7 @@ int process(const struct process_args p_args) {
   (void)target_height;
 
   int status = EXIT_SUCCESS;
-  Image source = Image(img_path);
+  const Image source = Image(img_path);
 
   // todo: for now we just crop 64x64 and save it to the output folder
   int w = source.width();

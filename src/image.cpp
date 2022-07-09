@@ -90,7 +90,7 @@ bool Image::write(const std::string &path) {
   return success;
 }
 
-Image &Image::crop(int x, int y, int width, int height) {
+const Image &Image::crop(int x, int y, int width, int height) const {
   Image *cropped = new Image(width, height, channels());
 
   for (int i = 0; i < height; i++) {
