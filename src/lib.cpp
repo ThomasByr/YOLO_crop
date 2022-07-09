@@ -7,7 +7,7 @@ void panic(const std::string &msg) {
   throw std::runtime_error(ss.str());
 }
 
-ImageType get_img_type(const std::string &path) {
+const ImageType get_img_type(const std::string &path) {
   const char *ext = strrchr(path.c_str(), '.');
   if (ext != nullptr) {
     if (strcmp(ext, ".png") == 0) {

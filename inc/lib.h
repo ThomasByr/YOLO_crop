@@ -80,7 +80,7 @@ void panic [[noreturn]] (const std::string &msg);
 
 enum struct ImageType { png, jpg, bmp, unknown };
 
-ImageType get_img_type(const std::string &path);
+const ImageType get_img_type(const std::string &path);
 
 /**
  * @brief implements repeat for a string

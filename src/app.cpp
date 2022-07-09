@@ -239,8 +239,8 @@ int process(const struct process_args p_args) {
   const Image source = Image(img_path);
 
   // todo: for now we just crop 64x64 and save it to the output folder
-  int w = source.width();
-  int h = source.height();
+  const int w = source.width();
+  const int h = source.height();
 
   for (int i = 0; i < w; i += 64) {
     for (int j = 0; j < h; j += 64) {
@@ -267,7 +267,7 @@ int App::run() {
   get_files_in_folder(_path_to_input_folder, imgs_files, _image_ext);
   create_dir(_path_to_output_folder);
 
-  unsigned n = imgs_files.size();
+  const unsigned n = imgs_files.size();
   unsigned idx = 0;
 
   log("found " + std::to_string(n) + " images\n", 1);
