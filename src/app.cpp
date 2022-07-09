@@ -212,15 +212,15 @@ struct process_args {
 };
 
 int process(const struct process_args p_args) {
-  std::string img_path = p_args.img_path;
-  std::string cfg_path = p_args.cfg_path;
-  std::string out_path = p_args.out_path;
-  std::string img_name = p_args.img_name;
-  std::string img_ext = p_args.img_ext;
-  int min_object_size = p_args.min_object_size;
-  int max_object_size = p_args.max_object_size;
-  int target_width = p_args.target_width;
-  int target_height = p_args.target_height;
+  const std::string img_path = p_args.img_path;
+  const std::string cfg_path = p_args.cfg_path;
+  const std::string out_path = p_args.out_path;
+  const std::string img_name = p_args.img_name;
+  const std::string img_ext = p_args.img_ext;
+  const int min_object_size = p_args.min_object_size;
+  const int max_object_size = p_args.max_object_size;
+  const int target_width = p_args.target_width;
+  const int target_height = p_args.target_height;
 
   // img_path = "./data/test/test.png"
   // cfg_path = "./data/test/test.json"
