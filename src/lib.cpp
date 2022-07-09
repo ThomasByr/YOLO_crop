@@ -79,7 +79,8 @@ void log(const std::string &msg, const LogLevel level) {
   log(msg, static_cast<unsigned>(level));
 }
 
-void display_progress(const unsigned progress, const unsigned total) {
+void display_progress(const unsigned progress, const unsigned total,
+                      const std::string &desc, const std::string &more) {
   // calculate the progress bar length
   static const unsigned bar_len = 50;
   const unsigned bar_len_p = bar_len * progress / total;
@@ -90,10 +91,9 @@ void display_progress(const unsigned progress, const unsigned total) {
 
   // print the progress bar
   std::stringstream ss;
-  ss << "Cutting Images" << FG_WHT << " \u2702 " << RST << ' ' << FG_GRN
-     << std::string(bar_len_p, '-') << FG_RED << std::string(bar_len_m, '-')
-     << RST << ' ' << FG_WHT << bar_pct << '%' << RST << ' ' << '(' << progress
-     << '/' << total << ')';
+  ss << desc << ' ' << FG_GRN << std::string(bar_len_p, '-') << FG_RED
+     << std::string(bar_len_m, '-') << RST << ' ' << FG_WHT << bar_pct << '%'
+     << RST << ' ' << '(' << progress << '/' << total << ')' << more;
 
   std::cout << '\r' << RST << ss.str() << std::flush;
 }

@@ -123,4 +123,6 @@ void log(const std::string &msg, const LogLevel level);
  * @param progress progress in total number of steps
  * @param total total number of steps
  */
-void display_progress(const unsigned progress, const unsigned total);
+void display_progress(const unsigned progress, const unsigned total,
+                      const std::string &desc = "",
+                      const std::string &more = "");

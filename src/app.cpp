@@ -200,16 +200,36 @@ void create_dir(const std::string &path) {
   }
 }
 
-int process(std::string img_path, std::string cfg_path, std::string out_path,
-            std::string img_name, std::string img_ext, int min_object_size,
-            int max_object_size, int target_width, int target_height) {
+/// @brief holds the necessary information for a single image
+struct process_args {
+  std::string img_path, cfg_path, out_path, img_name, img_ext;
+  int min_object_size, max_object_size, target_width, target_height;
+
+  process_args()
+      : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
+        min_object_size(EOF), max_object_size(EOF), target_width(EOF),
+        target_height(EOF) {}
+};
+
+int process(const struct process_args p_args) {
+  std::string img_path = p_args.img_path;
+  std::string cfg_path = p_args.cfg_path;
+  std::string out_path = p_args.out_path;
+  std::string img_name = p_args.img_name;
+  std::string img_ext = p_args.img_ext;
+  int min_object_size = p_args.min_object_size;
+  int max_object_size = p_args.max_object_size;
+  int target_width = p_args.target_width;
+  int target_height = p_args.target_height;
+
   // img_path = "./data/test/test.png"
   // cfg_path = "./data/test/test.json"
   // out_path = "./data/test/"
   // img_name = "test"
   // img_ext  = ".png"
 
-  (void)cfg_path; // todo: load config and crop accordingly
+  // todo: load config and crop accordingly
+  (void)cfg_path;
   (void)min_object_size;
   (void)max_object_size;
   (void)target_width;
@@ -256,13 +276,13 @@ int App::run() {
   thread_pool tp(_max_threads);
   std::vector<std::future<int>> futures(n);
 
-  std::string out_path = _path_to_output_folder + '/';
-  std::string img_ext = _image_ext;
-
-  int min_object_size = _min_object_size;
-  int max_object_size = _max_object_size;
-  int target_width = _target_width;
-  int target_height = _target_height;
+  struct process_args p_args;
+  p_args.out_path = _path_to_output_folder + '/';
+  p_args.img_ext = _image_ext;
+  p_args.min_object_size = _min_object_size;
+  p_args.max_object_size = _max_object_size;
+  p_args.target_width = _target_width;
+  p_args.target_height = _target_height;
 
   // process each image one at a time (in parallel)
   for (const auto &img_name : imgs_files) {
@@ -273,18 +293,19 @@ int App::run() {
     std::string img_name_no_ext =
         img_name.substr(0, img_name.find_last_of('.'));
 
-    futures[idx++] = tp.push([img_path, cfg_path, out_path, img_name_no_ext,
-                              img_ext, min_object_size, max_object_size,
-                              target_width, target_height](int) {
-      return process(img_path, cfg_path, out_path, img_name_no_ext, img_ext,
-                     min_object_size, max_object_size, target_width,
-                     target_height);
-    });
+    p_args.img_name = img_name_no_ext;
+    p_args.img_path = img_path;
+    p_args.cfg_path = cfg_path;
+
+    futures[idx++] = tp.push([p_args](int) { return process(p_args); });
   }
 
   // wait for all the threads to finish
   idx = 0;
   volatile unsigned progress = 0, last_progress = 0;
+  const std::string desc = "Cutting Images" FG_WHT " \u2702 " RST;
+  const std::string more = '[' + std::to_string(_max_threads) + ']';
+
   for (auto &f : futures) {
     switch (f.get()) {
     case EXIT_SUCCESS:
@@ -297,7 +318,7 @@ int App::run() {
 
     progress = (idx * 100) / n;
     if (progress > last_progress) {
-      display_progress(idx, n);
+      display_progress(idx, n, desc, more);
       last_progress = progress;
     }
   }
