@@ -40,8 +40,6 @@ public:
   bool read(const std::string &path, int channels_force = 0);
   bool write(const std::string &path);
 
-  unsigned char *operator()(int i, int j, int k);
-
   /**
    * @brief crop the image and return a new image
    *
@@ -51,5 +49,5 @@ public:
    * @param height height of the cropped image
    * @return Image& - reference to the cropped image
    */
-  Image &crop(int x, int y, int width, int height);
+  const Image &crop(int x, int y, int width, int height) const;
 };
