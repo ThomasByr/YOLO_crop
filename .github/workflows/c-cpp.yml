@@ -15,8 +15,8 @@ jobs:
 
       - name: Install Valgrind
         run: |
-          sudo apt install valgrind
-          echo "Valgrind installed"
+          sudo apt install valgrind > /dev/null
+          echo "\033[92mValgrind installed!\033[0m"
 
       - name: make check
         run: cd tests && make check
