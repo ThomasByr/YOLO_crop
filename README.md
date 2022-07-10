@@ -6,6 +6,7 @@
 [![GitHub latest commit](https://badgen.net/github/last-commit/ThomasByr/crop_imgs)](https://gitHub.com/ThomasByr/crop_imgs/commit/)
 [![Maintenance](https://img.shields.io/badge/maintained%3F-yes-green.svg)](https://GitHub.com/ThomasByr/crop_imgs/graphs/commit-activity)
 
+[![C/C++ CI](https://github.com/ThomasByr/crop_imgs/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ThomasByr/crop_imgs/actions/workflows/c-cpp.yml)
 [![GitHub version](https://badge.fury.io/gh/ThomasByr%2Fcrop_imgs.svg)](https://github.com/ThomasByr/crop_imgs)
 [![Author](https://img.shields.io/badge/author-@ThomasByr-blue)](https://github.com/ThomasByr)
 
