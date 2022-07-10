@@ -12,5 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install Valgrind
+        run: |
+          sudo apt install valgrind
+          echo "Valgrind installed"
+
       - name: make check
         run: cd tests && make check
