@@ -67,9 +67,10 @@ void memory_test_3(void) {
 void crop_test_0(void) {
   Image image = Image(0xff, 0xff, 1);
   const int w = image.width();
+  assert_leq(image.width(), 0xff);
   for (int i = 0; i < w; i++) {
     for (int j = 0; j < w; j++) {
-      image.data()[i * w + j] = i;
+      image.data()[i * w + j] = (unsigned char)i;
     }
   }
   for (int i = 0; i < w; i++) {
