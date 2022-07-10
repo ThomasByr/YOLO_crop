@@ -6,6 +6,14 @@
 
 #include "image.h"
 
+Image::Image() {
+  _width = 0;
+  _height = 0;
+  _channels = 0;
+  _size = 0;
+  _data = nullptr;
+}
+
 Image::Image(const std::string &path, int channels_force) {
   if (!read(path, channels_force)) panic("failed to read image from " + path);
 }
@@ -18,19 +26,17 @@ Image::Image(int width, int height, int channels)
   if (_data == nullptr) panic("failed to allocate memory for image");
 
   chk_p(memset(_data, 0, _size));
-
-  _type = ImageType::unknown;
 }
 
 Image::Image(const Image &other)
     : Image(other._width, other._height, other._channels) {
   void *dest = memcpy(_data, other._data, _size);
   if (dest != _data) panic("failed to copy image");
-
-  _type = other._type;
 }
 
-Image::~Image() { stbi_image_free(_data); }
+Image::~Image() {
+  if (_data != nullptr) delete[] _data;
+}
 
 const int &Image::width() const { return _width; }
 int &Image::width() { return _width; }
@@ -52,23 +58,18 @@ const unsigned char *Image::data() const { return _data; }
 unsigned char *Image::data() { return _data; }
 void Image::data(const unsigned char *data) { memcpy(_data, data, _size); }
 
-const ImageType &Image::type() const { return _type; }
-ImageType &Image::type() { return _type; }
-void Image::type(const ImageType &type) { _type = type; }
-
 bool Image::read(const std::string &path, int channels_force) {
   _data =
       stbi_load(path.c_str(), &_width, &_height, &_channels, channels_force);
   channels() = channels_force == 0 ? channels() : channels_force;
-  type() = get_img_type(path);
   return data() != nullptr;
 }
 
-bool Image::write(const std::string &path) {
+bool Image::write(const std::string &path) const {
   bool success;
-  if (type() == ImageType::unknown) type() = get_img_type(path);
+  const ImageType type = get_img_type(path);
 
-  switch (type()) {
+  switch (type) {
   case ImageType::png:
     success = stbi_write_png(path.c_str(), width(), height(), channels(),
                              data(), width() * channels());
@@ -86,11 +87,10 @@ bool Image::write(const std::string &path) {
     success = false;
     break;
   }
-
   return success;
 }
 
-const Image &Image::crop(int x, int y, int width, int height) const {
+Image *Image::crop(int x, int y, int width, int height) const {
   Image *cropped = new Image(width, height, channels());
 
   for (int i = 0; i < height; i++) {
@@ -103,5 +103,5 @@ const Image &Image::crop(int x, int y, int width, int height) const {
     }
   }
 
-  return *cropped;
+  return cropped;
 }

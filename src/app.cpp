@@ -72,6 +72,25 @@ void print_version [[noreturn]] () {
 
 App::~App() {}
 
+const std::string &App::path_to_input_folder() const {
+  return _path_to_input_folder;
+}
+const std::string &App::path_to_output_folder() const {
+  return _path_to_output_folder;
+}
+const std::string &App::path_to_config_folder() const {
+  return _path_to_config_folder;
+}
+const bool &App::config_folder_is_input_folder() const {
+  return _config_folder_is_input_folder;
+}
+const std::string &App::image_ext() const { return _image_ext; }
+const unsigned &App::max_threads() const { return _max_threads; }
+const int &App::min_object_size() const { return _min_object_size; }
+const int &App::max_object_size() const { return _max_object_size; }
+const int &App::target_width() const { return _target_width; }
+const int &App::target_height() const { return _target_height; }
+
 App::App(int argc, char *argv[]) {
   int opt;
   static const struct option long_options[] {
@@ -130,6 +149,14 @@ App::App(int argc, char *argv[]) {
       panic("unreachable");
     }
   }
+
+  if (optind < argc) {
+    ss.clear();
+    ss << "unrecognized argument '" << argv[optind] << "'\n";
+    print_help(ss.str());
+    panic("unreachable");
+  }
+  optind = 0; // reinitialize optind to 0 to make getopt_long() work again
 }
 
 void App::check_args() {
@@ -173,24 +200,6 @@ void App::check_args() {
     break;
   default:
     break;
-  }
-}
-
-void get_files_in_folder(const std::string &path,
-                         std::vector<std::string> &files,
-                         const std::string &fileext = "") {
-  DIR *dir;
-  struct dirent *ent;
-  if ((dir = opendir(path.c_str())) != nullptr) {
-    while ((ent = readdir(dir)) != nullptr) {
-      std::string filename(ent->d_name);
-      if (fileext.empty() || filename.find(fileext) != std::string::npos) {
-        files.push_back(filename);
-      }
-    }
-    chk(closedir(dir));
-  } else {
-    panic("could not open directory '" + path + (char)047);
   }
 }
 
@@ -244,13 +253,15 @@ int process(const struct process_args p_args) {
 
   for (int i = 0; i < w; i += 64) {
     for (int j = 0; j < h; j += 64) {
-      Image dest = source.crop(i, j, 64, 64);
+      const Image *dest = source.crop(i, j, 64, 64);
       std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
                               '_' + std::to_string(j) + img_ext;
-      if (!dest.write(dest_name)) {
+      if (!dest->write(dest_name)) {
         status = EXIT_FAILURE;
         log("could not write image" + dest_name + "\n", 1);
       }
+
+      delete dest;
     }
   }
   return status;

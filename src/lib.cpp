@@ -7,7 +7,7 @@ void panic(const std::string &msg) {
   throw std::runtime_error(ss.str());
 }
 
-const ImageType get_img_type(const std::string &path) {
+ImageType get_img_type(const std::string &path) {
   const char *ext = strrchr(path.c_str(), '.');
   if (ext != nullptr) {
     if (strcmp(ext, ".png") == 0) {
@@ -96,4 +96,32 @@ void display_progress(const unsigned progress, const unsigned total,
      << RST << ' ' << '(' << progress << '/' << total << ')' << more;
 
   std::cout << '\r' << RST << ss.str() << std::flush;
+}
+
+void get_files_in_folder(const std::string &path,
+                         std::vector<std::string> &files,
+                         const std::string &fileext) {
+  size_t pos;
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir(path.c_str())) != nullptr) {
+    while ((ent = readdir(dir)) != nullptr) {
+      std::string filename(ent->d_name);
+      // if the file is not a directory
+      if (filename != "." && filename != "..") {
+        // if the file is a file
+        if (ent->d_type == DT_REG) {
+          // if the file matches *.fileext and fileext is at the end
+          if (fileext.empty() ||
+              ((pos = filename.find(fileext)) != std::string::npos &&
+               filename.size() == fileext.size() + pos)) {
+            files.push_back(filename);
+          }
+        }
+      }
+    }
+    chk(closedir(dir));
+  } else {
+    panic("could not open directory '" + path + (char)047);
+  }
 }
