@@ -43,6 +43,17 @@ public:
    */
   ~App();
 
+  const std::string &path_to_input_folder() const;
+  const std::string &path_to_output_folder() const;
+  const std::string &path_to_config_folder() const;
+  const bool &config_folder_is_input_folder() const;
+  const std::string &image_ext() const;
+  const unsigned &max_threads() const;
+  const int &min_object_size() const;
+  const int &max_object_size() const;
+  const int &target_width() const;
+  const int &target_height() const;
+
   /**
    * @brief check all the arguments against a set of rules
    *

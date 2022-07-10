@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <cctype>
 #include <cerrno>
 #include <chrono>
@@ -53,12 +52,10 @@
 #ifndef DEBUG
 
 #define std_debug(msg) (void)msg;
-#define assert_debug(cond) (void)(cond);
 
 #else
 
 #define std_debug(msg) log(msg, 0);
-#define assert_debug(cond) assert(cond);
 
 #endif
 
@@ -80,7 +77,7 @@ void panic [[noreturn]] (const std::string &msg);
 
 enum struct ImageType { png, jpg, bmp, unknown };
 
-const ImageType get_img_type(const std::string &path);
+ImageType get_img_type(const std::string &path);
 
 /**
  * @brief implements repeat for a string
@@ -126,3 +123,14 @@ void log(const std::string &msg, const LogLevel level);
 void display_progress(const unsigned progress, const unsigned total,
                       const std::string &desc = "",
                       const std::string &more = "");
+
+/**
+ * @brief get all files in a directory
+ *
+ * @param path path to the directory
+ * @param files vector of files
+ * @param fileext optional file extension
+ */
+void get_files_in_folder(const std::string &path,
+                         std::vector<std::string> &files,
+                         const std::string &fileext = "");
