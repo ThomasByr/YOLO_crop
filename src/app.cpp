@@ -40,13 +40,14 @@ void print_help [[noreturn]] (const std::string &msg = "") {
   if (!msg.empty()) log(msg, 3);
 
   std::stringstream ss;
-  ss << "crop_img\n"
+  ss << "YOLO_crop\n"
      << "version: " << __VERSION_MAJOR__ << "." << __VERSION_MINOR__ << "."
      << __VERSION_PATCH__ << "\n";
   ss << " author: " << __AUTHOR__ << "\n\n";
-  ss << "  usage: crop_img [OPTION]...\n";
+  ss << "  usage: YOLO_crop [OPTION]...\n";
   ss << "-h, --help\t\t\tdisplay this help and exit\n";
   ss << "-v, --version\t\t\tdisplay version and exit\n";
+  ss << "-l, --license\t\t\tdisplay license and exit\n";
   ss << "-i, --in\t\t\tinput folder\n";
   ss << "-o, --out\t\t\toutput folder\n";
   ss << "-c, --cfg\t\t\tconfig folder (defaults to the input folder)\n";
@@ -61,12 +62,43 @@ void print_help [[noreturn]] (const std::string &msg = "") {
 
 void print_version [[noreturn]] () {
   std::stringstream ss;
-  ss << "crop_img\n"
+  ss << "YOLO_crop\n"
      << "version: " << __VERSION_MAJOR__ << "." << __VERSION_MINOR__ << "."
      << __VERSION_PATCH__ << "\n";
   ss << " author: " << __AUTHOR__ << "\n";
 
   std::cout << ss.str() << std::flush;
+  std::exit(EXIT_SUCCESS);
+}
+
+void print_license [[noreturn]] () {
+  static const char l[] =
+      "This project is licensed under the [GPL-3.0](LICENSE) license. "
+      "Please see the [license](LICENSE) file for more "
+      "details.\n\nRedistribution and use in source and binary forms, with "
+      "or without\nmodification, are permitted provided that the following "
+      "conditions are met:\n\n- Redistributions of source code must retain "
+      "the above copyright notice,\n  this list of conditions and the "
+      "following disclaimer.\n\n- Redistributions in binary form must "
+      "reproduce the above copyright notice,\n  this list of conditions "
+      "and the following disclaimer in the documentation\n  and/or other "
+      "materials provided with the distribution.\n\n- Neither the name of "
+      "the YOLO_crop authors nor the names of its\n  contributors may be "
+      "used to endorse or promote products derived from\n  this software "
+      "without specific prior written permission.\n\nTHIS SOFTWARE IS "
+      "PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\""
+      "\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED "
+      "TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A "
+      "PARTICULAR PURPOSE\nARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
+      "HOLDER OR CONTRIBUTORS BE\nLIABLE FOR ANY DIRECT, INDIRECT, "
+      "INCIDENTAL, SPECIAL, EXEMPLARY, OR\nCONSEQUENTIAL DAMAGES "
+      "(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\nSUBSTITUTE GOODS OR "
+      "SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) "
+      "HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER "
+      "IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR "
+      "OTHERWISE)\nARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, "
+      "EVEN IF ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGE.\n";
+  std::cout << l << std::flush;
   std::exit(EXIT_SUCCESS);
 }
 
@@ -102,9 +134,10 @@ App::App(int argc, char *argv[]) {
         {"thrds", required_argument, nullptr, 't'},
         {"siz", required_argument, nullptr, 's'},
         {"help", no_argument, nullptr, 'h'},
-        {"version", no_argument, nullptr, 'v'}, {nullptr, 0, nullptr, 0},
+        {"version", no_argument, nullptr, 'v'},
+        {"license", no_argument, nullptr, 'l'}, {nullptr, 0, nullptr, 0},
   };
-  static const char *short_options = "i:o:c:e:t:s:hv";
+  static const char *short_options = "i:o:c:e:t:s:hvl";
 
   std::string bad_opt;
   std::stringstream ss;
@@ -141,6 +174,9 @@ App::App(int argc, char *argv[]) {
     case 'v':
       print_version();
       panic("unreachable");
+    case 'l':
+      print_license();
+      panic("unreachable");
     default:
       bad_opt = std::string(argv[optind - 1]);
       ss.clear();
@@ -172,10 +208,10 @@ void App::check_args() {
   if (_path_to_input_folder.compare(_path_to_config_folder) == 0) {
     _config_folder_is_input_folder = true;
   }
-  if (_target_width != EOF && _target_height == EOF) {
+  if (_target_width > 0 && _target_height == EOF) {
     _target_height = _target_width;
   }
-  if (_target_width == EOF && _target_height != EOF) {
+  if (_target_width == EOF && _target_height > 0) {
     _target_width = _target_height;
   }
   if (_min_object_size != EOF && _min_object_size < 0) {
@@ -266,17 +302,17 @@ int process(const struct process_args p_args) {
     _width = round_to_int(lerp(0, w, _w));
     _height = round_to_int(lerp(0, h, _h));
 
-    width = target_width == EOF ? _width : target_width;
-    height = target_height == EOF ? _height : target_height;
+    width = target_width <= 0 ? _width : target_width;
+    height = target_height <= 0 ? _height : target_height;
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
     i = center_x - width / 2;
     j = center_y + height / 2;
 
-    if (min_object_size != EOF && min_object_size > min(_width, _height)) {
+    if (min_object_size > 0 && min_object_size > min(_width, _height)) {
       continue;
     }
-    if (max_object_size != EOF && max_object_size < max(_width, _height)) {
+    if (max_object_size > 0 && max_object_size < max(_width, _height)) {
       continue;
     }
 
