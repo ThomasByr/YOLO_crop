@@ -80,6 +80,24 @@ enum struct ImageType { png, jpg, bmp, unknown };
 ImageType get_img_type(const std::string &path);
 
 /**
+ * @brief linear interpolation
+ *
+ * @param a left bound
+ * @param b right bound
+ * @param t value to interpolate
+ * @return double - interpolated value
+ */
+double lerp(double a, double b, double t);
+
+/**
+ * @brief round to nearest integer
+ *
+ * @param d double to round
+ * @return int - rounded value
+ */
+int round_to_int(double d);
+
+/**
  * @brief implements repeat for a string
  *
  * @param str string
