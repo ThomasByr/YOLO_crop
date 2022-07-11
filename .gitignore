@@ -47,6 +47,7 @@ x86/
 Cargo.lock
 [Ii]n/
 [Oo]ut/
+[Dd]ata/
 
 # Visual Studio 2015/2017/2022 cache/options directory
 .vs/
