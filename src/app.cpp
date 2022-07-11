@@ -237,13 +237,6 @@ int process(const struct process_args p_args) {
   // img_name = "test"
   // img_ext  = ".png"
 
-  // todo: load config and crop accordingly
-  (void)cfg_path;
-  (void)min_object_size;
-  (void)max_object_size;
-  (void)target_width;
-  (void)target_height;
-
   int status = EXIT_SUCCESS, err = 0, n;
   const Image source = Image(img_path);
 
@@ -257,7 +250,6 @@ int process(const struct process_args p_args) {
   static const char pattern[] = "%d %lf %lf %lf %lf %lf";
   std::string line;
 
-  // todo: for now we just crop 64x64 and save it to the output folder
   const int w = source.width();
   const int h = source.height();
 
@@ -287,7 +279,7 @@ int process(const struct process_args p_args) {
       continue;
     }
 
-    const Image *dest = source.crop(i, j, k, l);
+    const Image *dest = source.crop(i, j, width, height);
     std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
                             '_' + std::to_string(j) + img_ext;
     if (!dest->write(dest_name)) {
@@ -302,7 +294,11 @@ int process(const struct process_args p_args) {
     log("could not read config file for image '" + img_path + "'\n", 3);
   }
 
-  cfg_file.close();
+  try {
+    cfg_file.close();
+  } catch (const std::exception &_) {
+  }
+
   return status;
 }
 
