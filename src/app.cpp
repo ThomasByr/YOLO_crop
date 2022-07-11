@@ -247,7 +247,7 @@ int process(const struct process_args p_args) {
   int status = EXIT_SUCCESS, err = 0, n;
   const Image source = Image(img_path);
 
-  std::ofstream cfg_file;
+  std::ifstream cfg_file;
   try {
     cfg_file.open(cfg_path + img_name + ".txt", std::ios::out);
   } catch (const std::exception &e) {
@@ -280,10 +280,10 @@ int process(const struct process_args p_args) {
     i = center_x - width / 2;
     j = center_y + height / 2;
 
-    if (min_object_size != EOF && min_object_size > min(_k, _l)) {
+    if (min_object_size != EOF && min_object_size > min(_width, _height)) {
       continue;
     }
-    if (max_object_size != EOF && max_object_size < max(_k, _l)) {
+    if (max_object_size != EOF && max_object_size < max(_width, _height)) {
       continue;
     }
 
