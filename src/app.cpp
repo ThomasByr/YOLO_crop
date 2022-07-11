@@ -283,6 +283,7 @@ int process(const struct process_args p_args) {
     log("could not open config file '" + cfg_path + img_name + ".txt'", 3);
     return EXIT_FAILURE;
   }
+  // "class, x, y, width, height, confidence"
   static const char pattern[] = "%d %lf %lf %lf %lf %lf";
   std::string line;
 
@@ -292,6 +293,21 @@ int process(const struct process_args p_args) {
   int _cls;
   double _cx, _cy, _w, _h, _score;
   int center_x, center_y, i, j, width, height, _width, _height;
+
+  // _cls is the class id
+  // _cx is the center x coordinate, in the range [0, 1]
+  // _cy is the center y coordinate, in the range [0, 1]
+  // _w is the width, in the range [0, 1]
+  // _h is the height, in the range [0, 1]
+
+  // center_x is the center x coordinate, in the range [0, w]
+  // center_y is the center y coordinate, in the range [0, h]
+  // i is the top-left x coordinate, in the range [0, w]
+  // j is the top-left y coordinate, in the range [0, h]
+  // width (either the desired width or the width of the object)
+  // height (same thing)
+  // _width is the width of the object, in the range [0, w]
+  // _height is the height of the object, in the range [0, h]
 
   // read cfg_file line by line
   while (std::getline(cfg_file, line)) { // boolean on conversion
@@ -307,12 +323,16 @@ int process(const struct process_args p_args) {
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
     i = center_x - width / 2;
-    j = center_y + height / 2;
+    j = center_y - height / 2;
 
-    if (min_object_size > 0 && min_object_size < min(_width, _height)) {
+    if (min_object_size > 0 && min_object_size < std::min(_width, _height)) {
       continue;
     }
-    if (max_object_size > 0 && max_object_size > max(_width, _height)) {
+    if (max_object_size > 0 && max_object_size > std::max(_width, _height)) {
+      continue;
+    }
+
+    if (width + height < 1) {
       continue;
     }
 
@@ -358,7 +378,7 @@ int App::run() {
   log("found " + std::to_string(n) + " images\n", 1);
 
   // thread pool
-  thread_pool tp(_max_threads);
+  thread_pool tp(std::min(_max_threads, n));
   std::vector<std::future<int>> futures(n);
 
   struct process_args p_args;
@@ -371,7 +391,6 @@ int App::run() {
 
   // process each image one at a time (in parallel)
   for (const auto &img_name : imgs_files) {
-    // todo: get the config file name from the image name
     std::string img_name_no_ext =
         img_name.substr(0, img_name.find_last_of('.'));
 
@@ -379,14 +398,15 @@ int App::run() {
     p_args.img_path = _path_to_input_folder + '/' + img_name;
     p_args.cfg_path = _path_to_config_folder + '/';
 
-    futures[idx++] = tp.push([p_args](int) { return process(p_args); });
+    futures[idx++] =
+        tp.push(std::move([p_args](int) { return process(p_args); }));
   }
 
   // wait for all the threads to finish
   idx = 0;
   volatile unsigned progress = 0, last_progress = 0;
   const std::string desc = "Cutting Images" FG_WHT " \u2702 " RST;
-  const std::string more = '[' + std::to_string(_max_threads) + ']';
+  const std::string more = '[' + std::to_string(tp.size()) + ']';
 
   for (auto &f : futures) {
     switch (f.get()) {
@@ -408,7 +428,7 @@ int App::run() {
   std::cout << std::endl;
 
   // terminate the thread pool
-  tp.stop();
+  tp.stop(false);
 
   return EXIT_SUCCESS;
 }

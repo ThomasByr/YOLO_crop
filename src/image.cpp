@@ -21,11 +21,12 @@ Image::Image(const std::string &path, int channels_force) {
 Image::Image(int width, int height, int channels)
     : _width(width), _height(height), _channels(channels) {
   _size = _width * _height * _channels;
-  _data = new unsigned char[_size];
+  // we use malloc here because stb_image uses free() to free the memory
+  _data = (unsigned char *)malloc(sizeof(unsigned char) * _size);
 
   if (_data == nullptr) panic("failed to allocate memory for image");
 
-  chk_p(memset(_data, 0, _size));
+  chk_p(memset(_data, (unsigned char)0, _size));
 }
 
 Image::Image(const Image &other)
@@ -35,7 +36,7 @@ Image::Image(const Image &other)
 }
 
 Image::~Image() {
-  if (_data != nullptr) delete[] _data;
+  if (_data != nullptr) stbi_image_free(_data);
 }
 
 const int &Image::width() const { return _width; }
@@ -94,9 +95,9 @@ Image *Image::crop(int x, int y, int width, int height) const {
   Image *cropped = new Image(width, height, channels());
 
   for (int i = 0; i < height; i++) {
-    if (i + y >= _height) break;
+    if (i + y >= _height || i + y < 0) continue;
     for (int j = 0; j < width; j++) {
-      if (j + x >= _width) break;
+      if (j + x >= _width || j + x < 0) continue;
       chk_p(memcpy(cropped->data() + (i * width + j) * channels(),
                    data() + ((y + i) * _width + x + j) * channels(),
                    channels()));
