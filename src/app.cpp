@@ -237,7 +237,7 @@ int process(const struct process_args p_args) {
   // img_name = "test"
   // img_ext  = ".png"
 
-  int status = EXIT_SUCCESS, err = 0, n;
+  int status = EXIT_SUCCESS, err = 0;
   const Image source = Image(img_path);
 
   std::ifstream cfg_file;
@@ -290,14 +290,16 @@ int process(const struct process_args p_args) {
 
     delete dest;
   }
-  if (n == -1 || err == EOF) {
+  if (err == EOF) {
     status = EXIT_FAILURE;
-    log("could not read config file for image '" + img_path + "'\n", 3);
+    log("could not parse config file for image '" + img_path + "'\n", 3);
   }
 
   try {
     cfg_file.close();
   } catch (const std::exception &_) {
+    status = EXIT_FAILURE;
+    log("could not close config file '" + cfg_path + img_name + ".txt'\n", 3);
   }
 
   return status;
