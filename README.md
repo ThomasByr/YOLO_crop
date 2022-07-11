@@ -1,13 +1,13 @@
 # Fast Crop for Images around YOLO bounding boxes
 
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://docs.microsoft.com/en-us/windows/wsl/tutorials/gui-apps)
-[![GitHub license](https://img.shields.io/github/license/ThomasByr/crop_imgs)](https://github.com/ThomasByr/crop_imgs/blob/master/LICENSE)
-[![GitHub commits](https://badgen.net/github/commits/ThomasByr/crop_imgs)](https://GitHub.com/ThomasByr/crop_imgs/commit/)
-[![GitHub latest commit](https://badgen.net/github/last-commit/ThomasByr/crop_imgs)](https://gitHub.com/ThomasByr/crop_imgs/commit/)
-[![Maintenance](https://img.shields.io/badge/maintained%3F-yes-green.svg)](https://GitHub.com/ThomasByr/crop_imgs/graphs/commit-activity)
+[![GitHub license](https://img.shields.io/github/license/ThomasByr/YOLO_crop)](https://github.com/ThomasByr/YOLO_crop/blob/master/LICENSE)
+[![GitHub commits](https://badgen.net/github/commits/ThomasByr/YOLO_crop)](https://GitHub.com/ThomasByr/YOLO_crop/commit/)
+[![GitHub latest commit](https://badgen.net/github/last-commit/ThomasByr/YOLO_crop)](https://gitHub.com/ThomasByr/YOLO_crop/commit/)
+[![Maintenance](https://img.shields.io/badge/maintained%3F-yes-green.svg)](https://GitHub.com/ThomasByr/YOLO_crop/graphs/commit-activity)
 
-[![C/C++ CI](https://github.com/ThomasByr/crop_imgs/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ThomasByr/crop_imgs/actions/workflows/c-cpp.yml)
-[![GitHub version](https://badge.fury.io/gh/ThomasByr%2Fcrop_imgs.svg)](https://github.com/ThomasByr/crop_imgs)
+[![C/C++ CI](https://github.com/ThomasByr/YOLO_crop/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ThomasByr/YOLO_crop/actions/workflows/c-cpp.yml)
+[![GitHub version](https://badge.fury.io/gh/ThomasByr%2FYOLO_crop.svg)](https://github.com/ThomasByr/YOLO_crop)
 [![Author](https://img.shields.io/badge/author-@ThomasByr-blue)](https://github.com/ThomasByr)
 
 1. [✏️ Setup](#️-setup)
