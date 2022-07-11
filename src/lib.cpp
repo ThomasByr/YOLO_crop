@@ -22,6 +22,10 @@ ImageType get_img_type(const std::string &path) {
   return ImageType::unknown;
 }
 
+double lerp(double a, double b, double t) { return a + (b - a) * t; }
+
+int round_to_int(double d) { return (int)(d + (d < 0 ? -0.5 : 0.5)); }
+
 std::string repeat(std::string str, const unsigned n) {
   if (n == 0) {
     str.clear();

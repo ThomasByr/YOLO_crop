@@ -244,26 +244,39 @@ int process(const struct process_args p_args) {
   (void)target_width;
   (void)target_height;
 
-  int status = EXIT_SUCCESS;
+  int status = EXIT_SUCCESS, err = 0, fd, n;
   const Image source = Image(img_path);
+  chk(fd = open((cfg_path + img_name + ".txt").c_str(), O_RDONLY));
 
   // todo: for now we just crop 64x64 and save it to the output folder
   const int w = source.width();
   const int h = source.height();
+  char buf[BUFSIZ];
 
-  for (int i = 0; i < w; i += 64) {
-    for (int j = 0; j < h; j += 64) {
-      const Image *dest = source.crop(i, j, 64, 64);
-      std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
-                              '_' + std::to_string(j) + img_ext;
-      if (!dest->write(dest_name)) {
-        status = EXIT_FAILURE;
-        log("could not write image" + dest_name + "\n", 1);
-      }
+  // read the file line by line
+  while ((n = read(fd, buf, BUFSIZ)) > 0) {
+    double _cx, _cy, _w, _h;
+    err = sscanf(buf, "%lf, %lf, %lf, %lf", &_cx, &_cy, &_w, &_h);
+    if (err == EOF) break;
 
-      delete dest;
+    int i = 0, j = 0;
+
+    const Image *dest = source.crop(i, j, 64, 64);
+    std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
+                            '_' + std::to_string(j) + img_ext;
+    if (!dest->write(dest_name)) {
+      status = EXIT_FAILURE;
+      log("could not write image '" + dest_name + "'\n", 3);
     }
+
+    delete dest;
   }
+  if (n == -1 || err == EOF) {
+    status = EXIT_FAILURE;
+    log("could not read config file for image '" + img_path + "'\n", 3);
+  }
+
+  chk(close(fd));
   return status;
 }
 
@@ -299,7 +312,7 @@ int App::run() {
   for (const auto &img_name : imgs_files) {
     // todo: get the config file name from the image name
     std::string img_path = _path_to_input_folder + '/' + img_name;
-    std::string cfg_path = _path_to_config_folder + '/' + img_name;
+    std::string cfg_path = _path_to_config_folder + '/';
 
     std::string img_name_no_ext =
         img_name.substr(0, img_name.find_last_of('.'));
