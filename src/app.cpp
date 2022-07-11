@@ -263,10 +263,11 @@ int process(const struct process_args p_args) {
     err = sscanf(line.c_str(), pattern, &_cls, &_cx, &_cy, &_w, &_h, &_score);
     if (err == EOF) break;
 
-    width = target_width == EOF ? (_width = round_to_int(lerp(0, w, _w)))
-                                : target_width;
-    height = target_height == EOF ? (_height = round_to_int(lerp(0, h, _h)))
-                                  : target_height;
+    _width = round_to_int(lerp(0, w, _w));
+    _height = round_to_int(lerp(0, h, _h));
+
+    width = target_width == EOF ? _width : target_width;
+    height = target_height == EOF ? _height : target_height;
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
     i = center_x - width / 2;
