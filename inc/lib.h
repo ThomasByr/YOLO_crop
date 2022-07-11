@@ -5,7 +5,9 @@
 #include <cerrno>
 #include <chrono>
 #include <csignal>
+#include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <future>
 #include <iostream>
 #include <map>
@@ -58,6 +60,9 @@
 #define std_debug(msg) log(msg, 0);
 
 #endif
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 #define chk(op)       \
   do {                \

@@ -244,24 +244,50 @@ int process(const struct process_args p_args) {
   (void)target_width;
   (void)target_height;
 
-  int status = EXIT_SUCCESS, err = 0, fd, n;
+  int status = EXIT_SUCCESS, err = 0, n;
   const Image source = Image(img_path);
-  chk(fd = open((cfg_path + img_name + ".txt").c_str(), O_RDONLY));
+
+  std::ofstream cfg_file;
+  try {
+    cfg_file.open(cfg_path + img_name + ".txt", std::ios::out);
+  } catch (const std::exception &e) {
+    log("could not open config file '" + cfg_path + img_name + ".txt'", 3);
+    return EXIT_FAILURE;
+  }
+  static const char pattern[] = "%d %lf %lf %lf %lf %lf";
+  std::string line;
 
   // todo: for now we just crop 64x64 and save it to the output folder
   const int w = source.width();
   const int h = source.height();
-  char buf[BUFSIZ];
 
-  // read the file line by line
-  while ((n = read(fd, buf, BUFSIZ)) > 0) {
-    double _cx, _cy, _w, _h;
-    err = sscanf(buf, "%lf, %lf, %lf, %lf", &_cx, &_cy, &_w, &_h);
+  int _cls;
+  double _cx, _cy, _w, _h, _score;
+  int center_x, center_y, i, j, width, height, _width, _height;
+
+  // read cfg_file line by line
+  while (std::getline(cfg_file, line)) { // boolean on conversion
+
+    err = sscanf(line.c_str(), pattern, &_cls, &_cx, &_cy, &_w, &_h, &_score);
     if (err == EOF) break;
 
-    int i = 0, j = 0;
+    width = target_width == EOF ? (_width = round_to_int(lerp(0, w, _w)))
+                                : target_width;
+    height = target_height == EOF ? (_height = round_to_int(lerp(0, h, _h)))
+                                  : target_height;
+    center_x = round_to_int(lerp(0, w, _cx));
+    center_y = round_to_int(lerp(0, h, _cy));
+    i = center_x - width / 2;
+    j = center_y + height / 2;
 
-    const Image *dest = source.crop(i, j, 64, 64);
+    if (min_object_size != EOF && min_object_size > min(_k, _l)) {
+      continue;
+    }
+    if (max_object_size != EOF && max_object_size < max(_k, _l)) {
+      continue;
+    }
+
+    const Image *dest = source.crop(i, j, k, l);
     std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
                             '_' + std::to_string(j) + img_ext;
     if (!dest->write(dest_name)) {
@@ -276,7 +302,7 @@ int process(const struct process_args p_args) {
     log("could not read config file for image '" + img_path + "'\n", 3);
   }
 
-  chk(close(fd));
+  cfg_file.close();
   return status;
 }
 
@@ -311,15 +337,12 @@ int App::run() {
   // process each image one at a time (in parallel)
   for (const auto &img_name : imgs_files) {
     // todo: get the config file name from the image name
-    std::string img_path = _path_to_input_folder + '/' + img_name;
-    std::string cfg_path = _path_to_config_folder + '/';
-
     std::string img_name_no_ext =
         img_name.substr(0, img_name.find_last_of('.'));
 
     p_args.img_name = img_name_no_ext;
-    p_args.img_path = img_path;
-    p_args.cfg_path = cfg_path;
+    p_args.img_path = _path_to_input_folder + '/' + img_name;
+    p_args.cfg_path = _path_to_config_folder + '/';
 
     futures[idx++] = tp.push([p_args](int) { return process(p_args); });
   }
