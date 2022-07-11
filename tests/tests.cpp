@@ -1,6 +1,7 @@
 #include "lib.h"
 
 #include "app.h"
+#include "ctpl.hpp"
 #include "image.h"
 
 #include "m.h"
@@ -68,9 +69,9 @@ void crop_test_0(void) {
   Image image = Image(0xff, 0xff, 1);
   const int w = image.width();
   assert_leq(image.width(), 0xff);
-  for (int i = 0; i < w; i++) {
-    for (int j = 0; j < w; j++) {
-      image.data()[i * w + j] = (unsigned char)i;
+  for (int j = 0; j < w; j++) {
+    for (int i = 0; i < w; i++) {
+      image.data()[j * w + i] = (unsigned char)j;
     }
   }
   for (int i = 0; i < w; i++) {
@@ -84,6 +85,51 @@ void crop_test_0(void) {
       assert_eq(c->data()[j], i);
     }
     delete c;
+  }
+}
+
+void crop_test_1(void) {
+  const Image image = Image(1024, 1024);
+
+  const int w = image.width();
+  const int h = image.height();
+
+  const Image *c = image.crop(0, 0, 2 * w, 2 * h);
+  assert_neq(c, nullptr);
+  assert_eq(c->width(), 2 * w);
+  assert_eq(c->height(), 2 * h);
+  assert_eq(c->channels(), 3);
+  assert_eq(c->size(), 2 * w * 2 * h * 3);
+  delete c;
+}
+
+void test_crop_2(void) {
+  using namespace ctpl;
+
+  unsigned n_threads = 4;
+  unsigned n_images = 10 * n_threads;
+  const Image image = Image(64, 64);
+  const int w = image.width();
+  const int h = image.height();
+
+  thread_pool pool(n_threads);
+  std::vector<std::future<int>> futures(n_images);
+
+  for (unsigned i = 0; i < n_images; i++) {
+    futures[i] = pool.push([&image, w, h](int) {
+      const Image *c = image.crop(-w, -h, 3 * w, 3 * h);
+      assert_neq(c, nullptr);
+      assert_eq(c->width(), 3 * w);
+      assert_eq(c->height(), 3 * h);
+      assert_eq(c->channels(), 3);
+      assert_eq(c->size(), 3 * w * 3 * h * 3);
+      delete c;
+      return 0;
+    });
+  }
+
+  for (unsigned i = 0; i < n_images; i++) {
+    assert_eq(futures[i].get(), 0);
   }
 }
 
@@ -139,6 +185,8 @@ int main(void) {
   test_case(memory_test_3);
 
   test_case(crop_test_0);
+  test_case(crop_test_1);
+  test_case(test_crop_2);
 
   test_case(app_test_0);
   test_case(app_test_1);
