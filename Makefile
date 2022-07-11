@@ -6,7 +6,7 @@ LDLIBS = -pthread
 INCLUDE_PATH = ./inc
 LIB_PATH     = ./lib
 
-TARGET       = crop_img
+TARGET       = YOLO_crop
 FILEXT       = cpp
 
 SRCDIR       = src
