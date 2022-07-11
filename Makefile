@@ -19,7 +19,7 @@ LIBS        := $(wildcard $(LIB_PATH)/*.h) $(wildcard $(LIB_PATH)/*.hpp)
 OBJECTS     := $(SOURCES:$(SRCDIR)/%.$(FILEXT)=$(OBJDIR)/%.o)
 
 PATH_TO_EXE  = $(BINDIR)/$(TARGET)
-LAUNCH_CMD   = $(PATH_TO_EXE) -i in -o out -e .jpg -s 30,60,64
+LAUNCH_CMD   = $(PATH_TO_EXE) -i data -o out -s 0,0,64
 
 all : debug
 
