@@ -1,6 +1,6 @@
 CC = g++
 
-CFLAGS = -march=native -pipe -std=gnu++11 -pedantic -Wall -Wextra -Werror
+CFLAGS = -pipe -std=gnu++11 -pedantic -Wall -Wextra -Werror
 LDLIBS = -pthread
 
 INCLUDE_PATH = ./inc
@@ -27,9 +27,13 @@ debug: CFLAGS += -Og -DDEBUG -g -ggdb
 debug: $(PATH_TO_EXE)
 	@echo "\033[93mRunning in debug mode!\033[0m"
 
-release: CFLAGS += -Ofast
+release: CFLAGS += -march=native -Ofast
 release: $(PATH_TO_EXE)
 	@echo "\033[96mRunning in release mode!\033[0m"
+
+generic: CFLAGS += -march=x86-64 -Ofast
+generic: $(PATH_TO_EXE)
+	@echo "\033[95mRunning in generic mode!\033[0m"
 
 run:
 ifneq ("$(wildcard $(PATH_TO_EXE))", "")
