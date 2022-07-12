@@ -55,6 +55,11 @@ void print_help [[noreturn]] (const std::string &msg = "") {
   ss << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n";
   ss << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
         "(defaults to no size restriction)\n";
+  ss << "  , --rctg\t\t\t\tuse rectangle as crop shape\n";
+  ss << "  , --squr\t\t\tuse square as crop shape\n";
+  ss << "  , --crcl\t\t\tuse circle as crop shape\n";
+  ss << "  , --llps\t\t\tuse ellipse as crop shape\n";
+  ss << "-b, --bg\t\t\tbackground image (defaults to none)\n";
 
   std::cout << ss.str() << std::flush;
   std::exit(status);
@@ -133,11 +138,15 @@ App::App(int argc, char *argv[]) {
         {"ext", required_argument, nullptr, 'e'},
         {"thrds", required_argument, nullptr, 't'},
         {"siz", required_argument, nullptr, 's'},
-        {"help", no_argument, nullptr, 'h'},
+        // {"rctg", no_argument, nullptr, OPT_RECTANGLE},
+        // {"squr", no_argument, nullptr, OPT_SQUARE},
+        // {"crcl", no_argument, nullptr, OPT_CIRCLE},
+        // {"llps", no_argument, nullptr, OPT_ELLIPSE},
+        {"bg", required_argument, nullptr, 'b'},
         {"version", no_argument, nullptr, 'v'},
         {"license", no_argument, nullptr, 'l'}, {nullptr, 0, nullptr, 0},
   };
-  static const char *short_options = "i:o:c:e:t:s:hvl";
+  static const char *short_options = "i:o:c:e:t:s:b:hvl";
 
   std::string bad_opt;
   std::stringstream ss;
@@ -168,6 +177,21 @@ App::App(int argc, char *argv[]) {
         panic("invalid argument for --siz from " + std::string(optarg));
       }
       break;
+    // case OPT_RECTANGLE:
+    //   _target_shape = Shape::rectangle;
+    //   break;
+    // case OPT_SQUARE:
+    //   _target_shape = Shape::square;
+    //   break;
+    // case OPT_CIRCLE:
+    //   _target_shape = Shape::circle;
+    //   break;
+    // case OPT_ELLIPSE:
+    //   _target_shape = Shape::ellipse;
+    //   break;
+    // case 'b':
+    //   _path_to_background_image = optarg;
+    //   break;
     case 'h':
       print_help();
       panic("unreachable");
@@ -220,7 +244,7 @@ void App::check_args() {
   if (_max_object_size != EOF && _max_object_size < 0) {
     print_help("maximum object size must be >= 0\n");
   }
-  if (_min_object_size != EOF && _max_object_size != EOF &&
+  if (_min_object_size < 0 && _max_object_size < 0 &&
       _min_object_size > _max_object_size) {
     print_help("minimum object size must be <= maximum object size\n");
   }
@@ -230,13 +254,30 @@ void App::check_args() {
   if (_target_height != EOF && _target_height < 0) {
     print_help("target height must be >= 0\n");
   }
+
   switch (get_img_type(_image_ext)) {
   case ImageType::unknown:
-    print_help("unrecognized image type\n");
+    print_help("unrecognized image type extention\n");
     break;
   default:
     break;
   }
+  // if (!_path_to_background_image.empty()) {
+  //   switch (get_img_type(_path_to_background_image)) {
+  //   case ImageType::unknown:
+  //     print_help("unrecognized background image type\n");
+  //     break;
+  //   default:
+  //     break;
+  //   }
+  // }
+  // switch (_target_shape) {
+  // case Shape::unknown:
+  //   print_help("target shape shouldn't be unknown at this point\n");
+  //   break;
+  // default:
+  //   break;
+  // }
 }
 
 void create_dir(const std::string &path) {
@@ -325,10 +366,10 @@ int process(const struct process_args p_args) {
     i = center_x - width / 2;
     j = center_y - height / 2;
 
-    if (min_object_size > 0 && min_object_size < std::min(_width, _height)) {
+    if (min_object_size > 0 && min_object_size > std::min(_width, _height)) {
       continue;
     }
-    if (max_object_size > 0 && max_object_size > std::max(_width, _height)) {
+    if (max_object_size > 0 && max_object_size < std::max(_width, _height)) {
       continue;
     }
 
@@ -435,15 +476,14 @@ int App::run() {
 
 std::ostream &operator<<(std::ostream &os, const App &app) {
   os << "App..." << '\n'
-     << "path_to_input_folder: " << app._path_to_input_folder << '\n'
-     << "path_to_config_folder: " << app._path_to_config_folder << '\n'
-     << "path_to_output_folder: " << app._path_to_output_folder << '\n'
-     << "image_ext: " << app._image_ext << '\n'
-     << "max_threads: " << app._max_threads << '\n'
-     << "min_object_size: " << app._min_object_size << '\n'
-     << "max_object_size: " << app._max_object_size << '\n'
-     << "target_width: " << app._target_width << '\n'
-     << "target_height: " << app._target_height << '\n'
-     << "config_folder_is_input_folder: " << app._config_folder_is_input_folder;
+     << "path to input folder: " << app._path_to_input_folder << '\n'
+     << "path to config folder: " << app._path_to_config_folder << '\n'
+     << "path to output folder: " << app._path_to_output_folder << '\n'
+     << "image extension: " << app._image_ext << '\n'
+     << "max threads: " << app._max_threads << '\n'
+     << "min object size: " << app._min_object_size << '\n'
+     << "max object size: " << app._max_object_size << '\n'
+     << "target width: " << app._target_width << '\n'
+     << "target height: " << app._target_height << '\n';
   return os;
 }
