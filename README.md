@@ -7,6 +7,7 @@
 [![Maintenance](https://img.shields.io/badge/maintained%3F-yes-green.svg)](https://GitHub.com/ThomasByr/YOLO_crop/graphs/commit-activity)
 
 [![C/C++ CI](https://github.com/ThomasByr/YOLO_crop/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ThomasByr/YOLO_crop/actions/workflows/c-cpp.yml)
+[![Publish](https://github.com/ThomasByr/YOLO_crop/actions/workflows/publish.yml/badge.svg)](https://github.com/ThomasByr/YOLO_crop/actions/workflows/publish.yml)
 [![GitHub version](https://badge.fury.io/gh/ThomasByr%2FYOLO_crop.svg)](https://github.com/ThomasByr/YOLO_crop)
 [![Author](https://img.shields.io/badge/author-@ThomasByr-blue)](https://github.com/ThomasByr)
 
@@ -19,9 +20,9 @@
 ## ✏️ Setup
 
 > **Note**
-> This repository contains very specific instructions for some un-related codebase. That being said, the present code should be as generic as possible for you to tweak it to your likings without any issues, hopefully.
+> This repository contains very specific instructions for some un-related codebase. That being said, the present code should be as generic as possible for you to tweak it to your likings without any issues, _hopefully_.
 
-Please make sure you do run a recent enough version of Linux, `g++ >= 8.4` should be enough though, with possible non-broken links to posix threads and all gnu standard extensions. This program uses the flag `-std=gnu++11` to compile.
+Please make sure you do run a recent enough version of Linux, `g++ >= 8.4` should be enough though, with possible non-broken links to **posix threads** and all **gnu standard** extensions. This program uses the flag `-std=gnu++11` to compile.
 
 This program takes images as input, as well as a config file, which are basically rectangles outputs from YOLO (which is a shape detection neural network). It then loop through all objects in the config file, optionally ignoring those whose size isn't in a specific range, and create new images cropping the original one.
 
@@ -45,7 +46,7 @@ The program takes command line arguments from :
 - `-c, --cfg` : config folder (defaults to the input folder)
 - `-e, --ext` : image file extension (defaults to .png)
 - `-t, --thrds` : max number of threads (defaults to 8)
-- `-s, --siz` : specific size of the objects (defaults to all objects)
+- `-s, --siz` : specific size of the objects (defaults to no size restriction)
 
 The specific size input should match the following pattern : `"min, max, w, h"`, which will result in the following behavior. The program will only crop around objects whose minimum size (the minimum between the width and the height of the rectangle defined by YOLO) is greater than or equal to `min`, and maximum size (same thing) is less than or equal to `max`. It will then crop the objects around their center with a new rectangle of width `w` and height `h`. If both `w` and `h` are unspecified, the new rectangle's dimensions will match the one defined by YOLO. If there is only one value specified (let's say that only `w` is specified), the program will crop according to the square of width `w`. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
 
@@ -58,6 +59,15 @@ So, a legal launching instruction could be :
 Just in case, this will tell the program to take all files with the `.jpg` extension in the folder named `orig`, where there is also matching named `.txt` files for the config, look only for objects whose minimum size is bigger than `30` and maximum size is less than `60`, and create a new `64x64` image for each one of them then save it inside the folder named `dest`.
 
 Please be thoughtfull when naming/generating images/config files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt`.
+
+Here is the current structure of the config text file that we assume you are using (**without** the first heading line) :
+
+```txt
+class_id center_x center_y width    height    confidence_score
+0        0.085143 0.38912  0.002182 0.0027172 0.9954308
+```
+
+Note that only `class_id` field is parsed as an int, and all others are doubles. A friendly reminder that here we use relative coordinates (meaning all doubles are in the range `[0, 1]`).
 
 ## 🧪 Testing
 
