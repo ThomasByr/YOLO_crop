@@ -138,10 +138,10 @@ App::App(int argc, char *argv[]) {
         {"ext", required_argument, nullptr, 'e'},
         {"thrds", required_argument, nullptr, 't'},
         {"siz", required_argument, nullptr, 's'},
-        // {"rctg", no_argument, nullptr, OPT_RECTANGLE},
-        // {"squr", no_argument, nullptr, OPT_SQUARE},
-        // {"crcl", no_argument, nullptr, OPT_CIRCLE},
-        // {"llps", no_argument, nullptr, OPT_ELLIPSE},
+        {"rctg", no_argument, nullptr, OPT_RCTG},
+        {"squr", no_argument, nullptr, OPT_SQUR},
+        {"crcl", no_argument, nullptr, OPT_CRCL},
+        {"llps", no_argument, nullptr, OPT_LLPS},
         {"bg", required_argument, nullptr, 'b'},
         {"version", no_argument, nullptr, 'v'},
         {"license", no_argument, nullptr, 'l'}, {nullptr, 0, nullptr, 0},
@@ -177,21 +177,21 @@ App::App(int argc, char *argv[]) {
         panic("invalid argument for --siz from " + std::string(optarg));
       }
       break;
-    // case OPT_RECTANGLE:
-    //   _target_shape = Shape::rectangle;
-    //   break;
-    // case OPT_SQUARE:
-    //   _target_shape = Shape::square;
-    //   break;
-    // case OPT_CIRCLE:
-    //   _target_shape = Shape::circle;
-    //   break;
-    // case OPT_ELLIPSE:
-    //   _target_shape = Shape::ellipse;
-    //   break;
-    // case 'b':
-    //   _path_to_background_image = optarg;
-    //   break;
+    case OPT_RCTGL:
+      _target_shape = ImageShape::rectangle;
+      break;
+    case OPT_SQUR:
+      _target_shape = ImageShape::square;
+      break;
+    case OPT_CRCL:
+      _target_shape = ImageShape::circle;
+      break;
+    case OPT_LLPS:
+      _target_shape = ImageShape::ellipse;
+      break;
+    case 'b':
+      _path_to_background_image = optarg;
+      break;
     case 'h':
       print_help();
       panic("unreachable");
@@ -262,22 +262,15 @@ void App::check_args() {
   default:
     break;
   }
-  // if (!_path_to_background_image.empty()) {
-  //   switch (get_img_type(_path_to_background_image)) {
-  //   case ImageType::unknown:
-  //     print_help("unrecognized background image type\n");
-  //     break;
-  //   default:
-  //     break;
-  //   }
-  // }
-  // switch (_target_shape) {
-  // case Shape::unknown:
-  //   print_help("target shape shouldn't be unknown at this point\n");
-  //   break;
-  // default:
-  //   break;
-  // }
+  if (!_path_to_background_image.empty()) {
+    switch (get_img_type(_path_to_background_image)) {
+    case ImageType::unknown:
+      print_help("unrecognized background image type\n");
+      break;
+    default:
+      break;
+    }
+  }
 }
 
 void create_dir(const std::string &path) {

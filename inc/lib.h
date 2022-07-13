@@ -51,6 +51,11 @@
 #define BG_CYN2 "\x1b[46m"
 #define BG_WHT "\x1b[47m"
 
+#define OPT_RCTG 1000 + 1
+#define OPT_SQUR 1000 + 2
+#define OPT_CRCL 1000 + 3
+#define OPT_LLPS 1000 + 4
+
 #ifndef DEBUG
 
 #define std_debug(msg) (void)msg;
@@ -80,6 +85,10 @@ void panic [[noreturn]] (const std::string &msg);
 enum struct ImageType { png, jpg, bmp, unknown };
 
 ImageType get_img_type(const std::string &path);
+
+enum struct ImageShape { square, rectangle, circle, ellipse, undefined };
+
+std::ostream &operator<<(std::ostream &os, const ImageShape &shape);
 
 /**
  * @brief linear interpolation

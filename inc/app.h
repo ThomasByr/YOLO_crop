@@ -20,6 +20,12 @@ private:
   // max number of threads to use for processing
   unsigned _max_threads = 8;
 
+  // image shape to crop to
+  ImageShape _image_shape = ImageShape::undefined;
+
+  // path to the background image to use for cropping
+  std::string _path_to_background_image;
+
   // minimum size of the object to be processed
   int _min_object_size = EOF;
   // maximum size of the object to be processed
