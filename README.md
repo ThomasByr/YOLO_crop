@@ -67,7 +67,8 @@ So, a legal launching instruction could be :
 
 Just in case, this will tell the program to take all files with the `.jpg` extension in the folder named `orig`, where there is also matching named `.txt` files for the config, look only for objects whose minimum size is bigger than `30` and maximum size is less than `60`, and crop according to the `ellipse` defined by that bounding box. The program will then crop the `orig/bg.png` at the center point to create a new `64x64` image for it to then paste the cropped ellipse. It will then save it inside the folder named `dest` using the `.jpg` format.
 
-Please be thoughtfull when naming/generating images/config files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt`.
+> **Warning**
+> Please be thoughtfull when naming/generating images/config files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt`.
 
 Here is the current structure of the config text file that we assume you are using (**without** the first heading line) :
 
@@ -102,14 +103,35 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ## 🔄 Changelog
 
-This section has been deleted and removed from git history.
+> For obvious reasons, some feature were not reported here and have been remove from git entirely.
+
+**v0** basic crop
+
+- we cropped images using a fixed sized rectangle
+- use of OpenCV
+
+**v1** home-made image library
+
+- grabbed stb_image code headers
+- cpp thread pool implementation using basic thread, future and mutex wizardry
+- implemented basic size selection
+
+**v2** basic shapes
+
+- choosing from square, rectangle, circle and ellipse
+- static type cast
+- shared pointer for default background
 
 ## 🐛 Bugs & TODO
 
-**bugs** (final correction patch version)
+**known bugs** (final correction patch version)
 
-This section has been deleted and removed from git history.
+- ~~`-s, --siz` sign comparison~~ (v1.1.2)
+- ~~possible int overflow detected by security analysis~~ (v2)
 
 **todo** (first implementation version)
 
-This section has been deleted and removed from git history.
+- [x] integrate YOLO basic object detection (v1)
+- [x] thread pool (v1)
+- [x] basic size selection (v1)
+- [x] alter original crop with shape selection (v2)
