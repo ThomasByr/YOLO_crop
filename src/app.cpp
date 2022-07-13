@@ -177,7 +177,7 @@ App::App(int argc, char *argv[]) {
         panic("invalid argument for --siz from " + std::string(optarg));
       }
       break;
-    case OPT_RCTGL:
+    case OPT_RCTG:
       _image_shape = ImageShape::rectangle;
       break;
     case OPT_SQUR:
