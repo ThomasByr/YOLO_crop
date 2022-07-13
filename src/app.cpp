@@ -178,16 +178,16 @@ App::App(int argc, char *argv[]) {
       }
       break;
     case OPT_RCTGL:
-      _target_shape = ImageShape::rectangle;
+      _image_shape = ImageShape::rectangle;
       break;
     case OPT_SQUR:
-      _target_shape = ImageShape::square;
+      _image_shape = ImageShape::square;
       break;
     case OPT_CRCL:
-      _target_shape = ImageShape::circle;
+      _image_shape = ImageShape::circle;
       break;
     case OPT_LLPS:
-      _target_shape = ImageShape::ellipse;
+      _image_shape = ImageShape::ellipse;
       break;
     case 'b':
       _path_to_background_image = optarg;
