@@ -794,9 +794,8 @@ STBIWDEF int stbi_write_hdr(char const *filename, int x, int y, int comp,
 static void *stbiw__sbgrowf(void **arr, int increment, int itemsize) {
   int m = *arr ? 2 * stbiw__sbm(*arr) + increment : increment + 1;
   void *p = STBIW_REALLOC_SIZED(
-      (unsigned long)(*arr ? stbiw__sbraw(*arr) : 0),
-      (unsigned long)(*arr ? (stbiw__sbm(*arr) * itemsize + sizeof(int) * 2)
-                           : 0),
+      *arr ? stbiw__sbraw(*arr) : 0,
+      *arr ? (stbiw__sbm(*arr) * itemsize + sizeof(int) * 2) : 0,
       (unsigned long)itemsize * m + sizeof(int) * 2);
   STBIW_ASSERT(p);
   if (p) {
