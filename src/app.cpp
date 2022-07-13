@@ -55,10 +55,10 @@ void print_help [[noreturn]] (const std::string &msg = "") {
   ss << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n";
   ss << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
         "(defaults to no size restriction)\n";
-  ss << "  , --rctg\t\t\t\tuse rectangle as crop shape\n";
-  ss << "  , --squr\t\t\tuse square as crop shape\n";
-  ss << "  , --crcl\t\t\tuse circle as crop shape\n";
-  ss << "  , --llps\t\t\tuse ellipse as crop shape\n";
+  ss << "  , --rctg\t\t\t\tuse rectangle as an inside crop shape\n";
+  ss << "  , --squr\t\t\tuse square as an inside crop shape\n";
+  ss << "  , --crcl\t\t\tuse circle as an inside crop shape\n";
+  ss << "  , --llps\t\t\tuse ellipse as an inside crop shape\n";
   ss << "-b, --bg\t\t\tbackground image (defaults to none)\n";
 
   std::cout << ss.str() << std::flush;
