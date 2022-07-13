@@ -26,9 +26,9 @@
 
 #define __AUTHOR__ "ThomasByr"
 
-#define __VERSION_MAJOR__ 1
-#define __VERSION_MINOR__ 1
-#define __VERSION_PATCH__ 0
+#define __VERSION_MAJOR__ 2
+#define __VERSION_MINOR__ 3
+#define __VERSION_PATCH__ 12
 
 #define TIMEOUT 3000
 
