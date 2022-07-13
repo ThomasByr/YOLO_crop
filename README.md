@@ -68,7 +68,7 @@ So, a legal launching instruction could be :
 Just in case, this will tell the program to take all files with the `.jpg` extension in the folder named `orig`, where there is also matching named `.txt` files for the config, look only for objects whose minimum size is bigger than `30` and maximum size is less than `60`, and crop according to the `ellipse` defined by that bounding box. The program will then crop the `orig/bg.png` at the center point to create a new `64x64` image for it to then paste the cropped ellipse. It will then save it inside the folder named `dest` using the `.jpg` format.
 
 > **Warning**
-> Please be thoughtfull when naming/generating images/config files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt`.
+> Please be thoughtfull when naming/generating images/config files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt` in the config folder.
 
 Here is the current structure of the config text file that we assume you are using (**without** the first heading line) :
 
