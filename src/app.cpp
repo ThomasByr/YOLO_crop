@@ -359,10 +359,10 @@ int process(const struct process_args p_args) {
     i = center_x - width / 2;
     j = center_y - height / 2;
 
-    if (min_object_size > 0 && min_object_size < std::min(_width, _height)) {
+    if (min_object_size > 0 && min_object_size > std::min(_width, _height)) {
       continue;
     }
-    if (max_object_size > 0 && max_object_size > std::max(_width, _height)) {
+    if (max_object_size > 0 && max_object_size < std::max(_width, _height)) {
       continue;
     }
 
