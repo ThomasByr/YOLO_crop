@@ -7,6 +7,7 @@
 [![Maintenance](https://img.shields.io/badge/maintained%3F-yes-green.svg)](https://GitHub.com/ThomasByr/YOLO_crop/graphs/commit-activity)
 
 [![C/C++ CI](https://github.com/ThomasByr/YOLO_crop/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/ThomasByr/YOLO_crop/actions/workflows/c-cpp.yml)
+[![CodeQL](https://github.com/ThomasByr/YOLO_crop/actions/workflows/codeql.yml/badge.svg)](https://github.com/ThomasByr/YOLO_crop/actions/workflows/codeql.yml)
 [![Publish](https://github.com/ThomasByr/YOLO_crop/actions/workflows/publish.yml/badge.svg)](https://github.com/ThomasByr/YOLO_crop/actions/workflows/publish.yml)
 [![GitHub version](https://badge.fury.io/gh/ThomasByr%2FYOLO_crop.svg)](https://github.com/ThomasByr/YOLO_crop)
 [![Author](https://img.shields.io/badge/author-@ThomasByr-blue)](https://github.com/ThomasByr)

@@ -20,7 +20,7 @@ Image::Image(const std::string &path, int channels_force) {
 
 Image::Image(int width, int height, int channels)
     : _width(width), _height(height), _channels(channels) {
-  _size = _width * _height * _channels;
+  _size = static_cast<size_t>(_width) * _height * _channels;
   // we use malloc here because stb_image uses free() to free the memory
   _data = (unsigned char *)malloc(sizeof(unsigned char) * _size);
 
