@@ -168,3 +168,13 @@ void display_progress(const unsigned progress, const unsigned total,
 void get_files_in_folder(const std::string &path,
                          std::vector<std::string> &files,
                          const std::string &fileext = "");
+
+/**
+ * @brief count all files in a directory
+ *
+ * @param path path to the directory
+ * @param fileext optional file extension
+ * @return unsigned - number of files
+ */
+unsigned count_files_in_folder(const std::string &path,
+                               const std::string &fileext = "");

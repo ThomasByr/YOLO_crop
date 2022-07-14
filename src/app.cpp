@@ -527,7 +527,7 @@ int App::run() {
     case EXIT_SUCCESS:
       break;
     default:
-      log("error processing image '" + imgs_files[idx] + (char)047, 3);
+      log("error processing image '" + imgs_files[idx] + "'\n", 3);
       break;
     }
     idx++;
@@ -548,6 +548,12 @@ int App::run() {
   if (p_args.background_image != nullptr) {
     delete p_args.background_image;
   }
+
+  std::cout << '\r' << "Counting Images... the program is now safe to interrupt"
+            << std::flush;
+
+  unsigned count = count_files_in_folder(_path_to_output_folder, _image_ext);
+  log("created " + std::to_string(count) + " images\n", 1);
 
   return EXIT_SUCCESS;
 }

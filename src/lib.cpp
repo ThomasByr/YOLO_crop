@@ -71,12 +71,13 @@ std::string operator*(std::string str, const unsigned n) {
 }
 
 void log(const std::string &msg, const unsigned level) {
-  // save the last message
-  static std::string last_msg;
+  // save if the last message ended with a newline
+  static bool last_msg_ended_with_newline = true;
+  chk(write(STDOUT_FILENO, "\033[2K\r", 5));
 
   // if the last message does not end with a newline, print the current message
   // without the level info
-  if (last_msg.empty() || (!last_msg.empty() && last_msg.back() == '\n')) {
+  if (last_msg_ended_with_newline) {
     switch (level) {
     case 0:
       std::cout << FG_GRN << "  debug: " << RST;
@@ -94,9 +95,8 @@ void log(const std::string &msg, const unsigned level) {
     }
   }
 
-  chk(write(STDOUT_FILENO, "\033[2K\r", 5));
   std::cout << msg << std::flush;
-  last_msg = msg;
+  last_msg_ended_with_newline = (msg.empty() || msg.back() == '\n');
 }
 
 void log(const std::string &msg, const LogLevel level) {
@@ -148,4 +148,33 @@ void get_files_in_folder(const std::string &path,
   } else {
     panic("could not open directory '" + path + (char)047);
   }
+}
+
+unsigned count_files_in_folder(const std::string &path,
+                               const std::string &fileext) {
+  unsigned count = 0;
+  size_t pos;
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir(path.c_str())) != nullptr) {
+    while ((ent = readdir(dir)) != nullptr) {
+      std::string filename(ent->d_name);
+      // if the file is not a directory
+      if (filename != "." && filename != "..") {
+        // if the file is a file
+        if (ent->d_type == DT_REG) {
+          // if the file matches *.fileext and fileext is at the end
+          if (fileext.empty() ||
+              ((pos = filename.find(fileext)) != std::string::npos &&
+               filename.size() == fileext.size() + pos)) {
+            count++;
+          }
+        }
+      }
+    }
+    chk(closedir(dir));
+  } else {
+    panic("could not open directory '" + path + (char)047);
+  }
+  return count;
 }
