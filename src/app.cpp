@@ -552,7 +552,8 @@ int App::run() {
   std::cout << '\r' << "Counting Images... the program is now safe to interrupt"
             << std::flush;
 
-  unsigned count = count_files_in_folder(_path_to_output_folder, _image_ext);
+  const unsigned count =
+      count_files_in_folder(_path_to_output_folder, _image_ext);
   log("created " + std::to_string(count) + " images\n", 1);
 
   return EXIT_SUCCESS;
