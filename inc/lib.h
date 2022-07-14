@@ -51,10 +51,13 @@
 #define BG_CYN2 "\x1b[46m"
 #define BG_WHT "\x1b[47m"
 
-#define OPT_RCTG 1000 + 1
-#define OPT_SQUR 1000 + 2
-#define OPT_CRCL 1000 + 3
-#define OPT_LLPS 1000 + 4
+#define OPT_RCTG 1000 + 1 // rectangle
+#define OPT_SQUR 1000 + 2 // square
+#define OPT_CRCL 1000 + 3 // circle
+#define OPT_LLPS 1000 + 4 // ellipse
+
+#define OPT_CLSS 2000 + 1 // class
+#define OPT_CNFD 2000 + 2 // confidence
 
 #ifndef DEBUG
 

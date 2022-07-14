@@ -26,6 +26,13 @@ private:
   // path to the background image to use for cropping
   std::string _path_to_background_image;
 
+  // minimum confidence threshold for detection
+  double _min_confidence = 0.5;
+
+  // class id to use for detection
+  int _class_id = EOF;
+  bool _class_id_is_set = false;
+
   // minimum size of the object to be processed
   int _min_object_size = EOF;
   // maximum size of the object to be processed

@@ -55,11 +55,14 @@ void print_help [[noreturn]] (const std::string &msg = "") {
   ss << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n";
   ss << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
         "(defaults to no size restriction)\n";
-  ss << "  , --rctg\t\t\t\tuse rectangle as an inside crop shape\n";
+  ss << "  , --rctg\t\t\tuse rectangle as an inside crop shape\n";
   ss << "  , --squr\t\t\tuse square as an inside crop shape\n";
   ss << "  , --crcl\t\t\tuse circle as an inside crop shape\n";
   ss << "  , --llps\t\t\tuse ellipse as an inside crop shape\n";
   ss << "-b, --bg\t\t\tbackground image (defaults to none)\n";
+  ss << "  , --clss\t\t\tonly look for specified class (defaults to all)\n";
+  ss << "  , --cnfd\t\t\tspecify a minimum confidence threshold "
+        "(defaults to .5)\n";
 
   std::cout << ss.str() << std::flush;
   std::exit(status);
@@ -143,6 +146,8 @@ App::App(int argc, char *argv[]) {
         {"crcl", no_argument, nullptr, OPT_CRCL},
         {"llps", no_argument, nullptr, OPT_LLPS},
         {"bg", required_argument, nullptr, 'b'},
+        {"clss", required_argument, nullptr, OPT_CLSS},
+        {"cnfd", required_argument, nullptr, OPT_CNFD},
         {"version", no_argument, nullptr, 'v'},
         {"license", no_argument, nullptr, 'l'}, {nullptr, 0, nullptr, 0},
   };
@@ -191,6 +196,13 @@ App::App(int argc, char *argv[]) {
       break;
     case 'b':
       _path_to_background_image = optarg;
+      break;
+    case OPT_CLSS:
+      _class_id = std::stoi(optarg);
+      _class_id_is_set = true;
+      break;
+    case OPT_CNFD:
+      _min_confidence = std::stod(optarg);
       break;
     case 'h':
       print_help();
@@ -254,6 +266,12 @@ void App::check_args() {
   if (_target_height != EOF && _target_height < 0) {
     print_help("target height must be >= 0\n");
   }
+  if (_min_confidence < 0 || _min_confidence > 1) {
+    print_help("minimum confidence must be between 0 and 1\n");
+  }
+  if (_class_id_is_set && _class_id < 0) {
+    print_help("please let class id be EOF by not setting --clss manually\n");
+  }
 
   switch (get_img_type(_image_ext)) {
   case ImageType::unknown:
@@ -282,18 +300,19 @@ void create_dir(const std::string &path) {
 /// @brief holds the necessary information for a single image
 struct process_args {
   std::string img_path, cfg_path, out_path, img_name, img_ext;
-  int min_object_size, max_object_size, target_width, target_height;
+  int min_object_size, max_object_size, target_width, target_height, class_id;
+  double min_confidence;
   ImageShape image_shape;
   Image *background_image;
 
   process_args()
       : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
         min_object_size(EOF), max_object_size(EOF), target_width(EOF),
-        target_height(EOF), image_shape(ImageShape::undefined),
-        background_image(nullptr) {}
+        target_height(EOF), class_id(EOF), min_confidence(0.5),
+        image_shape(ImageShape::undefined), background_image(nullptr) {}
 };
 
-int process(const struct process_args p_args) {
+static int process(const struct process_args p_args) {
   const std::string img_path = p_args.img_path;
   const std::string cfg_path = p_args.cfg_path;
   const std::string out_path = p_args.out_path;
@@ -303,8 +322,10 @@ int process(const struct process_args p_args) {
   const int max_object_size = p_args.max_object_size;
   const int target_width = p_args.target_width;
   const int target_height = p_args.target_height;
+  const int class_id = p_args.class_id;
   const ImageShape image_shape = p_args.image_shape;
   const Image *background_image = p_args.background_image;
+  double min_confidence = p_args.min_confidence;
 
   // img_path = "./data/test/test.png"
   // cfg_path = "./data/test/test.json"
@@ -362,6 +383,9 @@ int process(const struct process_args p_args) {
     err = sscanf(line.c_str(), pattern, &_cls, &_cx, &_cy, &_w, &_h, &_score);
     if (err == EOF) break;
 
+    if (class_id != EOF && _cls != class_id) continue;
+    if (_score < min_confidence) continue;
+
     _width = round_to_int(lerp(0, w, _w));
     _height = round_to_int(lerp(0, h, _h));
     _r = std::min(_width, _height);
@@ -418,8 +442,9 @@ int process(const struct process_args p_args) {
           3);
       return EXIT_FAILURE;
     }
-    std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
-                            '_' + std::to_string(j) + img_ext;
+    const std::string dest_name =
+        out_path + img_name + '_' + std::to_string(_cls) + '_' +
+        std::to_string(center_x) + '_' + std::to_string(center_y) + img_ext;
     if (!subject->write(dest_name)) {
       status = EXIT_FAILURE;
       log("could not write image '" + dest_name + "'\n", 3);
@@ -469,6 +494,8 @@ int App::run() {
   p_args.target_width = _target_width;
   p_args.target_height = _target_height;
   p_args.image_shape = _image_shape;
+  p_args.class_id = _class_id;
+  p_args.min_confidence = _min_confidence;
 
   if (_path_to_background_image.empty()) {
     p_args.background_image = nullptr;
