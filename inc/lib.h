@@ -90,6 +90,8 @@ enum struct ImageShape { square, rectangle, circle, ellipse, undefined };
 
 std::ostream &operator<<(std::ostream &os, const ImageShape &shape);
 
+std::string shape_to_string(const ImageShape &shape);
+
 /**
  * @brief linear interpolation
  *

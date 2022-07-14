@@ -23,25 +23,22 @@ ImageType get_img_type(const std::string &path) {
 }
 
 std::ostream &operator<<(std::ostream &os, const ImageShape &shape) {
+  return os << shape_to_string(shape);
+}
+
+std::string shape_to_string(const ImageShape &shape) {
   switch (shape) {
   case ImageShape::square:
-    os << "square";
-    break;
+    return "square";
   case ImageShape::rectangle:
-    os << "rectangle";
-    break;
+    return "rectangle";
   case ImageShape::circle:
-    os << "circle";
-    break;
+    return "circle";
   case ImageShape::ellipse:
-    os << "ellipse";
-    break;
+    return "ellipse";
   default:
-    os << "undefined";
-    break;
+    return "undefined";
   }
-
-  return os;
 }
 
 double lerp(double a, double b, double t) { return a + (b - a) * t; }

@@ -384,6 +384,7 @@ int process(const struct process_args p_args) {
     }
 
     Image *subject = nullptr;
+    // there might be a better way to do this...
     switch (image_shape) {
     case ImageShape::undefined:
       i = center_x - width / 2;
@@ -412,7 +413,9 @@ int process(const struct process_args p_args) {
       break;
     }
     if (subject == nullptr) {
-      log("could not crop image\n", 3);
+      log("could not crop image '" + img_path + "' to " +
+              shape_to_string(image_shape) + '\n',
+          3);
       return EXIT_FAILURE;
     }
     std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
