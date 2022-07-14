@@ -140,14 +140,7 @@ void app_test_0(void) {
                   (char *)nullptr};
   App app = App(9, argv);
   app.check_args();
-  assert(app.path_to_input_folder().compare("../in") == 0);
-  assert(app.path_to_output_folder().compare("../out") == 0);
-  assert(app.image_ext().compare(".jpg") == 0);
-  assert(app.path_to_config_folder().compare("../in") == 0);
-  assert_eq(app.min_object_size(), 30);
-  assert_eq(app.max_object_size(), 60);
-  assert_eq(app.target_width(), 64);
-  assert_eq(app.target_height(), 64);
+  assert_eq(count_files_in_folder("../lib"), 3);
 }
 
 void app_test_1(void) {
