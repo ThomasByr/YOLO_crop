@@ -97,6 +97,7 @@ void log(const std::string &msg, const unsigned level) {
     }
   }
 
+  chk(write(STDOUT_FILENO, "\033[2K\r", 5));
   std::cout << msg << std::flush;
   last_msg = msg;
 }

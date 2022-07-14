@@ -84,23 +84,81 @@ bool Image::write(const std::string &path) const {
         stbi_write_bmp(path.c_str(), width(), height(), channels(), data());
     break;
   default:
-    log("unknown image type from " + path + " - image not saved", 3);
+    log("unknown image type from " + path + " - image not saved\n", 3);
     success = false;
     break;
   }
   return success;
 }
 
-Image *Image::crop(int x, int y, int width, int height) const {
-  Image *cropped = new Image(width, height, channels());
+Image *Image::crop_rect(int x, int y, int width, int height, Image *bg, int bw,
+                        int bh) const {
+  const int cw = bw == EOF ? width : bw;
+  const int ch = bh == EOF ? height : bh;
+  Image *cropped;
+  if (bg == nullptr) {
+    cropped = new Image(cw, ch, channels());
+  } else {
+    cropped = bg;
+  }
+
+  const int w = cropped->width();
+  const int h = cropped->height();
+  const int x0 = w / 2 - width / 2;
+  const int y0 = h / 2 - height / 2;
+
+  // log("cropping image to " + std::to_string(width) + "x" +
+  //         std::to_string(height) + " at " + std::to_string(x) + "x" +
+  //         std::to_string(y) + " with background " + std::to_string(w) + "x" +
+  //         std::to_string(h) + " at " + std::to_string(x0) + "x" +
+  //         std::to_string(y0) + "\n",
+  //     0);
 
   for (int i = 0; i < height; i++) {
     if (i + y >= _height || i + y < 0) continue;
     for (int j = 0; j < width; j++) {
       if (j + x >= _width || j + x < 0) continue;
-      chk_p(memcpy(cropped->data() + (i * width + j) * channels(),
+      chk_p(memcpy(cropped->data() + ((y0 + i) * w + x0 + j) * channels(),
                    data() + ((y + i) * _width + x + j) * channels(),
                    channels()));
+    }
+  }
+
+  return cropped;
+}
+
+Image *Image::crop_ellipse(int x, int y, int width, int height, Image *bg,
+                           int bw, int bh) const {
+  const int cw = bw == EOF ? width : bw;
+  const int ch = bh == EOF ? height : bh;
+  Image *cropped;
+  if (bg == nullptr) {
+    cropped = new Image(cw, ch, channels());
+  } else {
+    cropped = bg;
+  }
+
+  const float cx = static_cast<float>(x) + width / 2.0f;
+  const float cy = static_cast<float>(y) + height / 2.0f;
+  const float rx = static_cast<float>(width) / 2.0f;
+  const float ry = static_cast<float>(height) / 2.0f;
+
+  const int w = cropped->width();
+  const int h = cropped->height();
+  const int x0 = w / 2 - width / 2;
+  const int y0 = h / 2 - height / 2;
+
+  for (int i = 0; i < height; i++) {
+    if (i + y >= _height || i + y < 0) continue;
+    for (int j = 0; j < width; j++) {
+      if (j + x >= _width || j + x < 0) continue;
+      const float dx = static_cast<float>(j) + x - cx;
+      const float dy = static_cast<float>(i) + y - cy;
+      if (dx * dx / (rx * rx) + dy * dy / (ry * ry) <= 1) {
+        chk_p(memcpy(cropped->data() + ((y0 + i) * w + x0 + j) * channels(),
+                     data() + ((y + i) * _width + x + j) * channels(),
+                     channels()));
+      }
     }
   }
 

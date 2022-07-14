@@ -283,11 +283,14 @@ void create_dir(const std::string &path) {
 struct process_args {
   std::string img_path, cfg_path, out_path, img_name, img_ext;
   int min_object_size, max_object_size, target_width, target_height;
+  ImageShape image_shape;
+  Image *background_image;
 
   process_args()
       : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
         min_object_size(EOF), max_object_size(EOF), target_width(EOF),
-        target_height(EOF) {}
+        target_height(EOF), image_shape(ImageShape::undefined),
+        background_image(nullptr) {}
 };
 
 int process(const struct process_args p_args) {
@@ -300,6 +303,8 @@ int process(const struct process_args p_args) {
   const int max_object_size = p_args.max_object_size;
   const int target_width = p_args.target_width;
   const int target_height = p_args.target_height;
+  const ImageShape image_shape = p_args.image_shape;
+  const Image *background_image = p_args.background_image;
 
   // img_path = "./data/test/test.png"
   // cfg_path = "./data/test/test.json"
@@ -308,7 +313,9 @@ int process(const struct process_args p_args) {
   // img_ext  = ".png"
 
   int status = EXIT_SUCCESS, err = 0;
-  const Image source = Image(img_path);
+  int channel_force =
+      background_image != nullptr ? background_image->channels() : 0;
+  const Image source = Image(img_path, channel_force);
 
   std::ifstream cfg_file;
   try {
@@ -324,9 +331,15 @@ int process(const struct process_args p_args) {
   const int w = source.width();
   const int h = source.height();
 
+  int bg_w = -1, bg_h = -1;
+  if (background_image != nullptr) {
+    bg_w = background_image->width();
+    bg_h = background_image->height();
+  }
+
   int _cls;
   double _cx, _cy, _w, _h, _score;
-  int center_x, center_y, i, j, width, height, _width, _height;
+  int center_x, center_y, i, j, width, height, _width, _height, _r;
 
   // _cls is the class id
   // _cx is the center x coordinate, in the range [0, 1]
@@ -351,13 +364,12 @@ int process(const struct process_args p_args) {
 
     _width = round_to_int(lerp(0, w, _w));
     _height = round_to_int(lerp(0, h, _h));
+    _r = std::min(_width, _height);
 
     width = target_width <= 0 ? _width : target_width;
     height = target_height <= 0 ? _height : target_height;
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
-    i = center_x - width / 2;
-    j = center_y - height / 2;
 
     if (min_object_size > 0 && min_object_size > std::min(_width, _height)) {
       continue;
@@ -365,20 +377,51 @@ int process(const struct process_args p_args) {
     if (max_object_size > 0 && max_object_size < std::max(_width, _height)) {
       continue;
     }
-
-    if (width + height < 1) {
-      continue;
+    Image *dest = nullptr;
+    if (background_image != nullptr) {
+      dest = background_image->crop_rect(bg_w / 2 - width / 2,
+                                         bg_h / 2 - height / 2, width, height);
     }
 
-    const Image *dest = source.crop(i, j, width, height);
+    Image *subject = nullptr;
+    switch (image_shape) {
+    case ImageShape::undefined:
+      i = center_x - width / 2;
+      j = center_y - height / 2;
+      subject = source.crop_rect(i, j, width, height, dest);
+      break;
+    case ImageShape::square:
+      i = center_x - _r / 2;
+      j = center_y - _r / 2;
+      subject = source.crop_rect(i, j, _r, _r, dest, width, height);
+      break;
+    case ImageShape::rectangle:
+      i = center_x - _width / 2;
+      j = center_y - _height / 2;
+      subject = source.crop_rect(i, j, _width, _height, dest, width, height);
+      break;
+    case ImageShape::circle:
+      i = center_x - _r / 2;
+      j = center_y - _r / 2;
+      subject = source.crop_ellipse(i, j, _r, _r, dest, width, height);
+      break;
+    case ImageShape::ellipse:
+      i = center_x - _width / 2;
+      j = center_y - _height / 2;
+      subject = source.crop_ellipse(i, j, _width, _height, dest, width, height);
+      break;
+    }
+    if (subject == nullptr) {
+      log("could not crop image\n", 3);
+      return EXIT_FAILURE;
+    }
     std::string dest_name = out_path + img_name + '_' + std::to_string(i) +
                             '_' + std::to_string(j) + img_ext;
-    if (!dest->write(dest_name)) {
+    if (!subject->write(dest_name)) {
       status = EXIT_FAILURE;
       log("could not write image '" + dest_name + "'\n", 3);
     }
-
-    delete dest;
+    delete subject; // which will delete dest if it was not nullptr
   }
   if (err == EOF) {
     status = EXIT_FAILURE;
@@ -422,6 +465,13 @@ int App::run() {
   p_args.max_object_size = _max_object_size;
   p_args.target_width = _target_width;
   p_args.target_height = _target_height;
+  p_args.image_shape = _image_shape;
+
+  if (_path_to_background_image.empty()) {
+    p_args.background_image = nullptr;
+  } else {
+    p_args.background_image = new Image(_path_to_background_image);
+  }
 
   // process each image one at a time (in parallel)
   for (const auto &img_name : imgs_files) {
@@ -464,6 +514,11 @@ int App::run() {
   // terminate the thread pool
   tp.stop(false);
 
+  // delete the background image if it was created
+  if (p_args.background_image != nullptr) {
+    delete p_args.background_image;
+  }
+
   return EXIT_SUCCESS;
 }
 
@@ -477,6 +532,8 @@ std::ostream &operator<<(std::ostream &os, const App &app) {
      << "min object size: " << app._min_object_size << '\n'
      << "max object size: " << app._max_object_size << '\n'
      << "target width: " << app._target_width << '\n'
-     << "target height: " << app._target_height << '\n';
+     << "target height: " << app._target_height << '\n'
+     << "custom crop shape: " << app._image_shape << '\n'
+     << "path to background image: " << app._path_to_background_image << '\n';
   return os;
 }
