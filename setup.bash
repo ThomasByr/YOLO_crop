@@ -10,10 +10,10 @@ if ! which valgrind >/dev/null; then
 fi
 
 # jump to tests directory
-cd tests || echo "> tests directory not found" && exit 1
+cd tests || exit 1
 
 # run tests
-make check || echo "> tests failed" && exit 1
+make check
 
 # clean up
 make clean && cd ..
