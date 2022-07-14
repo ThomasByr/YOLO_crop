@@ -35,40 +35,40 @@ static void sig_handler(int signal) {
   }
 }
 
-void print_help [[noreturn]] (const std::string &msg = "") {
+static void print_help [[noreturn]] (const std::string &msg = "") {
   int status = msg.empty() ? EXIT_SUCCESS : EXIT_FAILURE;
   if (!msg.empty()) log(msg, 3);
 
   std::stringstream ss;
   ss << "YOLO_crop\n"
      << "version: " << __VERSION_MAJOR__ << "." << __VERSION_MINOR__ << "."
-     << __VERSION_PATCH__ << "\n";
-  ss << " author: " << __AUTHOR__ << "\n\n";
-  ss << "  usage: YOLO_crop [OPTION]...\n";
-  ss << "-h, --help\t\t\tdisplay this help and exit\n";
-  ss << "-v, --version\t\t\tdisplay version and exit\n";
-  ss << "-l, --license\t\t\tdisplay license and exit\n";
-  ss << "-i, --in\t\t\tinput folder\n";
-  ss << "-o, --out\t\t\toutput folder\n";
-  ss << "-c, --cfg\t\t\tconfig folder (defaults to the input folder)\n";
-  ss << "-e, --ext\t\t\timage file extension (defaults to .png)\n";
-  ss << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n";
-  ss << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
-        "(defaults to no size restriction)\n";
-  ss << "  , --rctg\t\t\tuse rectangle as an inside crop shape\n";
-  ss << "  , --squr\t\t\tuse square as an inside crop shape\n";
-  ss << "  , --crcl\t\t\tuse circle as an inside crop shape\n";
-  ss << "  , --llps\t\t\tuse ellipse as an inside crop shape\n";
-  ss << "-b, --bg\t\t\tbackground image (defaults to none)\n";
-  ss << "  , --clss\t\t\tonly look for specified class (defaults to all)\n";
-  ss << "  , --cnfd\t\t\tspecify a minimum confidence threshold "
+     << __VERSION_PATCH__ << "\n"
+     << " author: " << __AUTHOR__ << "\n\n"
+     << "  usage: YOLO_crop [OPTION]...\n"
+     << "-h, --help\t\t\tdisplay this help and exit\n"
+     << "-v, --version\t\t\tdisplay version and exit\n"
+     << "-l, --license\t\t\tdisplay license and exit\n"
+     << "-i, --in\t\t\tinput folder\n"
+     << "-o, --out\t\t\toutput folder\n"
+     << "-c, --cfg\t\t\tconfig folder (defaults to the input folder)\n"
+     << "-e, --ext\t\t\timage file extension (defaults to .png)\n"
+     << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n"
+     << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
+        "(defaults to no size restriction)\n"
+     << "  , --rctg\t\t\tuse rectangle as an inside crop shape\n"
+     << "  , --squr\t\t\tuse square as an inside crop shape\n"
+     << "  , --crcl\t\t\tuse circle as an inside crop shape\n"
+     << "  , --llps\t\t\tuse ellipse as an inside crop shape\n"
+     << "-b, --bg\t\t\tbackground image (defaults to none)\n"
+     << "  , --clss\t\t\tonly look for the specified class (defaults to all)\n"
+     << "  , --cnfd\t\t\tspecify a minimum confidence threshold "
         "(defaults to .5)\n";
 
   std::cout << ss.str() << std::flush;
   std::exit(status);
 }
 
-void print_version [[noreturn]] () {
+static void print_version [[noreturn]] () {
   std::stringstream ss;
   ss << "YOLO_crop\n"
      << "version: " << __VERSION_MAJOR__ << "." << __VERSION_MINOR__ << "."
@@ -79,7 +79,7 @@ void print_version [[noreturn]] () {
   std::exit(EXIT_SUCCESS);
 }
 
-void print_license [[noreturn]] () {
+static void print_license [[noreturn]] () {
   static const char l[] =
       "This project is licensed under the [GPL-3.0](LICENSE) license. "
       "Please see the [license](LICENSE) file for more "
@@ -111,25 +111,6 @@ void print_license [[noreturn]] () {
 }
 
 App::~App() {}
-
-const std::string &App::path_to_input_folder() const {
-  return _path_to_input_folder;
-}
-const std::string &App::path_to_output_folder() const {
-  return _path_to_output_folder;
-}
-const std::string &App::path_to_config_folder() const {
-  return _path_to_config_folder;
-}
-const bool &App::config_folder_is_input_folder() const {
-  return _config_folder_is_input_folder;
-}
-const std::string &App::image_ext() const { return _image_ext; }
-const unsigned &App::max_threads() const { return _max_threads; }
-const int &App::min_object_size() const { return _min_object_size; }
-const int &App::max_object_size() const { return _max_object_size; }
-const int &App::target_width() const { return _target_width; }
-const int &App::target_height() const { return _target_height; }
 
 App::App(int argc, char *argv[]) {
   int opt;
@@ -312,7 +293,7 @@ struct process_args {
         image_shape(ImageShape::undefined), background_image(nullptr) {}
 };
 
-static int process(const struct process_args p_args) {
+static ssize_t process(const struct process_args p_args) {
   const std::string img_path = p_args.img_path;
   const std::string cfg_path = p_args.cfg_path;
   const std::string out_path = p_args.out_path;
@@ -333,6 +314,7 @@ static int process(const struct process_args p_args) {
   // img_name = "test"
   // img_ext  = ".png"
 
+  ssize_t count = 0;
   int status = EXIT_SUCCESS, err = 0;
   int channel_force =
       background_image != nullptr ? background_image->channels() : 0;
@@ -444,13 +426,17 @@ static int process(const struct process_args p_args) {
     }
     const std::string dest_name =
         out_path + img_name + '_' + std::to_string(_cls) + '_' +
-        std::to_string(center_x) + '_' + std::to_string(center_y) + img_ext;
+        std::to_string(center_x) + '_' + std::to_string(center_y) + '[' +
+        std::to_string(count) + ']' + img_ext;
     if (!subject->write(dest_name)) {
       status = EXIT_FAILURE;
       log("could not write image '" + dest_name + "'\n", 3);
+    } else {
+      count++;
     }
     delete subject; // which will delete dest if it was not nullptr
   }
+
   if (err == EOF) {
     status = EXIT_FAILURE;
     log("could not parse config file for image '" + img_path + "'\n", 3);
@@ -463,7 +449,13 @@ static int process(const struct process_args p_args) {
     log("could not close config file '" + cfg_path + img_name + ".txt'\n", 3);
   }
 
-  return status;
+  switch (status) {
+  case EXIT_FAILURE:
+    log("error processing image '" + img_name + img_ext + "'\n", 3);
+    break;
+  }
+
+  return count;
 }
 
 int App::run() {
@@ -484,7 +476,7 @@ int App::run() {
 
   // thread pool
   thread_pool tp(std::min(_max_threads, n));
-  std::vector<std::future<int>> futures(n);
+  std::vector<std::future<ssize_t>> futures(n);
 
   struct process_args p_args;
   p_args.out_path = _path_to_output_folder + '/';
@@ -513,7 +505,7 @@ int App::run() {
     p_args.cfg_path = _path_to_config_folder + '/';
 
     futures[idx++] =
-        tp.push(std::move([p_args](int) { return process(p_args); }));
+        tp.push(std::move([p_args](ssize_t) { return process(p_args); }));
   }
 
   // wait for all the threads to finish
@@ -522,16 +514,11 @@ int App::run() {
   const std::string desc = "Cutting Images" FG_WHT " \u2702 " RST;
   const std::string more = '[' + std::to_string(tp.size()) + ']';
 
+  ssize_t count = 0;
   for (auto &f : futures) {
-    switch (f.get()) {
-    case EXIT_SUCCESS:
-      break;
-    default:
-      log("error processing image '" + imgs_files[idx] + "'\n", 3);
-      break;
-    }
-    idx++;
+    count += f.get();
 
+    idx++;
     progress = (idx * 100) / n;
     if (progress > last_progress) {
       display_progress(idx, n, desc, more);
@@ -548,12 +535,6 @@ int App::run() {
   if (p_args.background_image != nullptr) {
     delete p_args.background_image;
   }
-
-  std::cout << '\r' << "Counting Images... the program is now safe to interrupt"
-            << std::flush;
-
-  const unsigned count =
-      count_files_in_folder(_path_to_output_folder, _image_ext);
   log("created " + std::to_string(count) + " images\n", 1);
 
   return EXIT_SUCCESS;
@@ -571,6 +552,9 @@ std::ostream &operator<<(std::ostream &os, const App &app) {
      << "target width: " << app._target_width << '\n'
      << "target height: " << app._target_height << '\n'
      << "custom crop shape: " << app._image_shape << '\n'
-     << "path to background image: " << app._path_to_background_image << '\n';
+     << "path to background image: " << app._path_to_background_image << '\n'
+     << "selected class id: " << app._class_id << '\n'
+     << "minimum confidence score: " << app._min_confidence << '\n';
+
   return os;
 }
