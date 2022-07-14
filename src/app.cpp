@@ -372,17 +372,18 @@ static ssize_t process(const struct process_args p_args) {
     _height = round_to_int(lerp(0, h, _h));
     _r = std::min(_width, _height);
 
-    width = target_width <= 0 ? _width : target_width;
-    height = target_height <= 0 ? _height : target_height;
-    center_x = round_to_int(lerp(0, w, _cx));
-    center_y = round_to_int(lerp(0, h, _cy));
-
     if (min_object_size > 0 && min_object_size > std::min(_width, _height)) {
       continue;
     }
     if (max_object_size > 0 && max_object_size < std::max(_width, _height)) {
       continue;
     }
+
+    width = target_width <= 0 ? _width : target_width;
+    height = target_height <= 0 ? _height : target_height;
+    center_x = round_to_int(lerp(0, w, _cx));
+    center_y = round_to_int(lerp(0, h, _cy));
+
     Image *dest = nullptr;
     if (background_image != nullptr) {
       dest = background_image->crop_rect(bg_w / 2 - width / 2,
