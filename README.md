@@ -24,7 +24,7 @@
 > **Note**
 > This repository contains very specific instructions for some un-related codebase. That being said, the present code should be as generic as possible for you to tweak it to your likings without any issues, _hopefully_.
 
-Please make sure you do run a recent enough version of Linux, `g++ >= 4.1 w/ CentOS 7` should be enough though, with possible non-broken links to **posix threads** and all **gnu standard** extensions. This program uses the flag `-std=gnu++11` to compile.
+Please make sure you do run a recent enough version of Linux, `g++ >= 4.8.5 w/ CentOS 7` should be enough though, with possible non-broken links to **posix threads** and all **gnu standard** extensions. This program uses the flag `-std=gnu++11` to compile.
 
 This program takes images as input, as well as a config file, which are basically rectangles outputs from YOLO (which is a shape detection neural network). It then loop through all objects in the config file, optionally ignoring those whose size isn't in a specific range, and create new images cropping the original one.
 
@@ -38,7 +38,7 @@ The produced executable binary is to be found inside of the `bin` folder.
 
 ## 💁 More infos and Usage
 
-The program takes command line arguments from :
+The program takes command line arguments from (`..` indicating no short option) :
 
 - `-h, --help` : display this help and exit
 - `-v, --version` : display version and exit
@@ -131,6 +131,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 - ~~`-s, --siz` sign comparison~~ (v1.1.2)
 - ~~possible int overflow detected by security analysis~~ (v2)
+- ~~bas offset when cropping as circle or ellipse~~ (v2.1)
 
 **todo** (first implementation version)
 
