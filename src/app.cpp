@@ -423,7 +423,9 @@ static ssize_t process(const struct process_args p_args) {
       log("could not crop image '" + img_path + "' to " +
               shape_to_string(image_shape) + '\n',
           3);
-      return EXIT_FAILURE;
+      status = EXIT_FAILURE;
+      if (dest != nullptr) delete dest;
+      continue;
     }
     const std::string dest_name =
         out_path + img_name + '_' + std::to_string(_cls) + '_' +
@@ -445,14 +447,16 @@ static ssize_t process(const struct process_args p_args) {
 
   try {
     cfg_file.close();
-  } catch (const std::exception &_) {
+  } catch (const std::exception &e) {
     status = EXIT_FAILURE;
-    log("could not close config file '" + cfg_path + img_name + ".txt'\n", 3);
+    log("could not close config file '" + cfg_path + img_name + ".txt'\n" +
+            e.what() + '\n',
+        3);
   }
 
   switch (status) {
   case EXIT_FAILURE:
-    log("error processing image '" + img_name + img_ext + "'\n", 3);
+    log("error(s) processing image '" + img_name + img_ext + "'\n", 3);
     break;
   }
 
