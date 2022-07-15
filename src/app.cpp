@@ -37,7 +37,7 @@ static void sig_handler(int signal) {
 
 static void print_help [[noreturn]] (const std::string &msg = "") {
   int status = msg.empty() ? EXIT_SUCCESS : EXIT_FAILURE;
-  if (!msg.empty()) log(msg, 3);
+  if (!msg.empty()) log(msg, LogLevel::error);
 
   std::stringstream ss;
   ss << "YOLO_crop\n"
@@ -324,7 +324,8 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   try {
     cfg_file.open(cfg_path + img_name + ".txt", std::ios::out);
   } catch (const std::exception &e) {
-    log("could not open config file '" + cfg_path + img_name + ".txt'", 3);
+    log("could not open config file '" + cfg_path + img_name + ".txt'",
+        LogLevel::error);
     return EXIT_FAILURE;
   }
   // "class, x, y, width, height, confidence"
@@ -423,7 +424,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     if (subject == nullptr) {
       log("could not crop image '" + img_path + "' to " +
               shape_to_string(image_shape) + '\n',
-          3);
+          LogLevel::error);
       status = EXIT_FAILURE;
       if (dest != nullptr) delete dest;
       continue;
@@ -436,7 +437,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
         std::to_string(count) + ']' + img_ext;
     if (!subject->write(subject_name)) {
       status = EXIT_FAILURE;
-      log("could not write image '" + subject_name + "'\n", 3);
+      log("could not write image '" + subject_name + "'\n", LogLevel::error);
     } else {
       count++; // saving was successful, increment the counter
     }
@@ -445,7 +446,8 @@ static ssize_t process(const struct process_args p_args /* copy */) {
 
   if (err == EOF) {
     status = EXIT_FAILURE;
-    log("could not parse config file for image '" + img_path + "'\n", 3);
+    log("could not parse config file for image '" + img_path + "'\n",
+        LogLevel::error);
   } // sscanf failed, break fallthrough
 
   try {
@@ -454,13 +456,14 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     status = EXIT_FAILURE;
     log("could not close config file '" + cfg_path + img_name + ".txt'\n" +
             e.what() + '\n',
-        3);
+        LogLevel::error);
   }
 
   if (status == EXIT_FAILURE) {
     // instead of returning the status and then loging the error
     // we acknowledge errors and return the number of correctly saved images
-    log("error(s) processing image '" + img_name + img_ext + "'\n", 3);
+    log("error(s) processing image '" + img_name + img_ext + "'\n",
+        LogLevel::error);
   }
 
   return count;
@@ -480,7 +483,7 @@ int App::run() {
   const unsigned n = imgs_files.size();
   unsigned idx = 0;
 
-  log("found " + std::to_string(n) + " images\n", 1);
+  log("found " + std::to_string(n) + " images\n", LogLevel::info);
 
   // thread pool
   thread_pool tp(std::min(_max_threads, n));
@@ -547,7 +550,7 @@ int App::run() {
   if (p_args.background_image != nullptr) {
     delete p_args.background_image;
   }
-  log("created " + std::to_string(count) + " images\n", 1);
+  log("created " + std::to_string(count) + " images\n", LogLevel::info);
 
   return EXIT_SUCCESS;
 }

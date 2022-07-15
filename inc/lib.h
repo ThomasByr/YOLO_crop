@@ -51,6 +51,8 @@
 #define BG_CYN2 "\x1b[46m"
 #define BG_WHT "\x1b[47m"
 
+// this is for long options with no short option equivalent
+
 #define OPT_RCTG 1000 + 1 // rectangle
 #define OPT_SQUR 1000 + 2 // square
 #define OPT_CRCL 1000 + 3 // circle
@@ -59,16 +61,19 @@
 #define OPT_CLSS 2000 + 1 // class
 #define OPT_CNFD 2000 + 2 // confidence
 
+// debug level only when DEBUG is defined
+
 #ifndef DEBUG
 
 #define std_debug(msg) (void)msg;
 
 #else
 
-#define std_debug(msg) log(msg, 0);
+#define std_debug(msg) log(msg, LogLevel::debug);
 
 #endif
 
+/// @brief kernel level check for errors on integers
 #define chk(op)       \
   do {                \
     if ((op) == -1) { \
@@ -76,6 +81,7 @@
     }                 \
   } while (0)
 
+/// @brief kernel level check for errors on pointers
 #define chk_p(op)          \
   do {                     \
     if ((op) == nullptr) { \
@@ -83,10 +89,17 @@
     }                      \
   } while (0)
 
+/// @brief throw an exception with the given message
 void panic [[noreturn]] (const std::string &msg);
 
 enum struct ImageType { png, jpg, bmp, unknown };
 
+/**
+ * @brief get image type from file extension or path
+ *
+ * @param path path to image file (or extension)
+ * @return ImageType - image type
+ */
 ImageType get_img_type(const std::string &path);
 
 enum struct ImageShape { square, rectangle, circle, ellipse, undefined };
@@ -131,22 +144,16 @@ std::string repeat(std::string str, const unsigned n);
  */
 std::string operator*(std::string str, const unsigned n);
 
-enum struct LogLevel { Debug = 0, Info = 1, Warn = 2, Error = 3 };
+enum struct LogLevel { debug, info, warn, error };
 
 /**
  * @brief outputs a string to stdout on a given level
- *
- * @param msg message to output
- * @param level level of output (0 = debug, 1 = info, 2 = warn, 3 = error)
- */
-void log(const std::string &msg, const unsigned level = 0);
-/**
- * @brief outputs a string to stdout on a given level
+ * @note this function should not be used for fatal errors
  *
  * @param msg message to output
  * @param level level of output
  */
-void log(const std::string &msg, const LogLevel level);
+void log(const std::string &msg, const LogLevel level = LogLevel::info);
 
 /**
  * @brief displays a progress bar

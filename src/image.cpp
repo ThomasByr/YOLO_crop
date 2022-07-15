@@ -84,7 +84,8 @@ bool Image::write(const std::string &path) const {
         stbi_write_bmp(path.c_str(), width(), height(), channels(), data());
     break;
   default:
-    log("unknown image type from " + path + " - image not saved\n", 3);
+    log("unknown image type from " + path + " - image not saved\n",
+        LogLevel::error);
     success = false;
     break;
   }
@@ -112,7 +113,7 @@ Image *Image::crop_rect(int x, int y, int width, int height, Image *bg, int bw,
   //         std::to_string(y) + " with background " + std::to_string(w) + "x" +
   //         std::to_string(h) + " at " + std::to_string(x0) + "x" +
   //         std::to_string(y0) + "\n",
-  //     0);
+  //     LogLevel::debug);
 
   for (int i = 0; i < height; i++) {
     if (i + y >= _height || i + y < 0) continue;

@@ -70,7 +70,7 @@ std::string operator*(std::string str, const unsigned n) {
   return repeat(std::move(str), n);
 }
 
-void log(const std::string &msg, const unsigned level) {
+void log(const std::string &msg, const LogLevel level) {
   // save if the last message ended with a newline
   static bool last_msg_ended_with_newline = true;
   chk(write(STDOUT_FILENO, "\033[2K\r", 5));
@@ -79,16 +79,16 @@ void log(const std::string &msg, const unsigned level) {
   // without the level info
   if (last_msg_ended_with_newline) {
     switch (level) {
-    case 0:
+    case LogLevel::debug:
       std::cout << FG_GRN << "  debug: " << RST;
       break;
-    case 1:
+    case LogLevel::info:
       std::cout << FG_CYN << "   info: " << RST;
       break;
-    case 2:
+    case LogLevel::warn:
       std::cout << FG_YEL << "   warn: " << RST;
       break;
-    case 3:
+    case LogLevel::error:
     default:
       std::cout << FG_RED << "  error: " << RST;
       break;
@@ -97,10 +97,6 @@ void log(const std::string &msg, const unsigned level) {
 
   std::cout << msg << std::flush;
   last_msg_ended_with_newline = (msg.empty() || msg.back() == '\n');
-}
-
-void log(const std::string &msg, const LogLevel level) {
-  log(msg, static_cast<unsigned>(level));
 }
 
 void display_progress(const unsigned progress, const unsigned total,
