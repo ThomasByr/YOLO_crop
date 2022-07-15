@@ -293,7 +293,7 @@ struct process_args {
         image_shape(ImageShape::undefined), background_image(nullptr) {}
 };
 
-static ssize_t process(const struct process_args p_args) {
+static ssize_t process(const struct process_args p_args /* copy */) {
   const std::string img_path = p_args.img_path;
   const std::string cfg_path = p_args.cfg_path;
   const std::string out_path = p_args.out_path;
