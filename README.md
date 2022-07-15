@@ -59,7 +59,7 @@ The program takes command line arguments from (`..` indicating no short option) 
 
 The specific size input should match the following pattern : `"min, max, w, h"`, which will result in the following behavior. The program will only crop around objects whose minimum size (the minimum between the width and the height of the rectangle defined by YOLO) is greater than or equal to `min`, and maximum size (same thing) is less than or equal to `max`. It will then crop the objects around their center with a new rectangle of width `w` and height `h`. If both `w` and `h` are unspecified, the new rectangle's dimensions will match the one defined by YOLO. If there is only one value specified (let's say that only `w` is specified), the program will crop according to the square of width `w`. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
 
-Additionally, since v2, you can crop in a variety of new ways. At the time of writing, you can choose between `rectangle`, `square`, `circle` and `ellipse`. All previous four shapes only apply to the bounding box defined by YOLO. It works as follow : if you do not specify any shape and force the cropped size, the program will crop the original image with that size, around the center point defined by the bounding box. Then if you do specify any shape, it will crop according to that shape whose dimensions are defined by the **outer rectangle** bounding box. It is up to you to force the dimension of the final image, which, if you choose from either circle or ellipse, is guarantied to have rounded black corners. This you can avoid by specifying a path to a background default image (this argument will only eliminate dark edges when cropping outside of the original image when used with no specific shape). The program will first crop the background image to the desired size (either the one you chose or the one defined by the bounding box) at the center of the background image, and then copy the YOLO-recognized subject above it according to the shape.
+Additionally, since v2, you can crop in a variety of new ways. At the time of writing, you can choose between `rectangle`, `square`, `circle` and `ellipse`. All previous four shapes only apply to the bounding box defined by YOLO. It works as follow : if you do not specify any shape and force the cropped size, the program will crop the original image with that size, around the center point defined by the bounding box. Then if you do specify any shape, it will crop according to that shape whose dimensions are defined by the **outer rectangle** bounding box. It is up to you to force the dimension of the final image, which, if you choose from either circle or ellipse, is guarantied to have rounded black corners. This you can avoid by specifying a path to a background default image (this argument will only eliminate dark edges when cropping outside of the original image when used with no specific shape). The program will first crop the background image to the desired size (either the one you chose or the one defined by the bounding box) at the center of the background image, and then copy the YOLO-recognized subject above it, according to the shape. No checks are performed regarding the size of the background image, you might want to supply one large enough.
 
 So, a legal launching instruction could be :
 
@@ -67,7 +67,7 @@ So, a legal launching instruction could be :
 ./bin/YOLO_crop -i orig -o dest -e .jpg -t 4 -s 30,60,64 --llps -b orig/bg.png
 ```
 
-Just in case, this will tell the program to take all files with the `.jpg` extension in the folder named `orig`, where there is also matching named `.txt` files for the config, look only for objects whose minimum size is bigger than `30` and maximum size is less than `60`, and crop according to the `ellipse` defined by that bounding box. The program will then crop the `orig/bg.png` at the center point to create a new `64x64` image for it to then paste the cropped ellipse. It will then save it inside the folder named `dest` using the `.jpg` format.
+Just in case, this will tell the program to take all files with the `.jpg` extension in the folder named `orig`, where there is also matching named `.txt` files for the config, look only for objects whose minimum size is bigger than `30` and maximum size is less than `60`, and crop according to the `ellipse` defined by that bounding box. The program will then crop the `orig/bg.png` at the center point to create a new `64x64` image for it to then paste the cropped ellipse in the middle. It will then save it inside the folder named `dest` using the `.jpg` format.
 
 > **Warning**
 > Please be thoughtfull when naming/generating images/config files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt` in the config folder.
@@ -107,31 +107,31 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 > For obvious reasons, some feature were not reported here and have been remove from git entirely.
 
-**v0** basic crop
+**v0** - basic crop
 
 - we cropped images using a fixed sized rectangle
 - use of OpenCV
 
-**v1** home-made image library
+**v1** - home-made image processing wizardry
 
 - grabbed stb_image code headers
-- cpp thread pool implementation using basic thread, future and mutex wizardry
+- cpp thread pool implementation using basic thread, future and mutex
 - implemented basic size selection
 
-**v2** basic shapes
+**v2** - cropping shapes
 
 - choosing from square, rectangle, circle and ellipse
 - static type cast
-- shared pointer for default background
+- shared pointers for default background and improved performances
 - class and confidence extra selection
 
 ## 🐛 Bugs & TODO
 
 **known bugs** (final correction patch version)
 
-- ~~`-s, --siz` sign comparison~~ (v1.1.2)
+- ~~`-s, --siz` signed comparison~~ (v1.1.2)
 - ~~possible int overflow detected by security analysis~~ (v2)
-- ~~bas offset when cropping as circle or ellipse~~ (v2.1)
+- ~~bad offset when cropping as circle or ellipse~~ (v2.1)
 
 **todo** (first implementation version)
 
