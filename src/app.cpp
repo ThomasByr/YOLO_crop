@@ -321,12 +321,11 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   const Image source = Image(img_path, channel_force);
 
   std::ifstream cfg_file;
-  try {
-    cfg_file.open(cfg_path + img_name + ".txt", std::ios::out);
-  } catch (const std::exception &e) {
-    log("could not open config file '" + cfg_path + img_name + ".txt'",
+  cfg_file.open(cfg_path + img_name + ".txt", std::ios::out);
+  if (!cfg_file.is_open()) {
+    log("could not open config file '" + cfg_path + img_name + ".txt'\n",
         LogLevel::error);
-    return EXIT_FAILURE;
+    status = EXIT_FAILURE;
   }
   // "class, x, y, width, height, confidence"
   static const char pattern[] = "%d %lf %lf %lf %lf %lf";
@@ -450,13 +449,13 @@ static ssize_t process(const struct process_args p_args /* copy */) {
         LogLevel::error);
   } // sscanf failed, break fallthrough
 
-  try {
+  if (cfg_file.is_open()) {
     cfg_file.close();
-  } catch (const std::exception &e) {
-    status = EXIT_FAILURE;
-    log("could not close config file '" + cfg_path + img_name + ".txt'\n" +
-            e.what() + '\n',
-        LogLevel::error);
+    if (cfg_file.fail()) {
+      status = EXIT_FAILURE;
+      log("could not close config file '" + cfg_path + img_name + ".txt'\n",
+          LogLevel::error);
+    }
   }
 
   if (status == EXIT_FAILURE) {
