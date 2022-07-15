@@ -393,32 +393,33 @@ static ssize_t process(const struct process_args p_args) {
     Image *subject = nullptr;
     // there might be a better way to do this...
     switch (image_shape) {
-    case ImageShape::undefined:
+    case ImageShape::undefined: // we do not crop according to the bounding box
       i = center_x - width / 2;
       j = center_y - height / 2;
       subject = source.crop_rect(i, j, width, height, dest);
       break;
-    case ImageShape::square:
+    case ImageShape::square: // square inside the bounding box
       i = center_x - _r / 2;
       j = center_y - _r / 2;
       subject = source.crop_rect(i, j, _r, _r, dest, width, height);
       break;
-    case ImageShape::rectangle:
+    case ImageShape::rectangle: // the bounding box itself
       i = center_x - _width / 2;
       j = center_y - _height / 2;
       subject = source.crop_rect(i, j, _width, _height, dest, width, height);
       break;
-    case ImageShape::circle:
+    case ImageShape::circle: // circle inside the bounding box
       i = center_x - _r / 2;
       j = center_y - _r / 2;
       subject = source.crop_ellipse(i, j, _r, _r, dest, width, height);
       break;
-    case ImageShape::ellipse:
+    case ImageShape::ellipse: // ellipse inside the bounding box
       i = center_x - _width / 2;
       j = center_y - _height / 2;
       subject = source.crop_ellipse(i, j, _width, _height, dest, width, height);
       break;
     }
+
     if (subject == nullptr) {
       log("could not crop image '" + img_path + "' to " +
               shape_to_string(image_shape) + '\n',
@@ -426,16 +427,18 @@ static ssize_t process(const struct process_args p_args) {
       status = EXIT_FAILURE;
       if (dest != nullptr) delete dest;
       continue;
-    }
-    const std::string dest_name =
+    } // big oops
+
+    // save the image
+    const std::string subject_name =
         out_path + img_name + '_' + std::to_string(_cls) + '_' +
         std::to_string(center_x) + '_' + std::to_string(center_y) + '[' +
         std::to_string(count) + ']' + img_ext;
-    if (!subject->write(dest_name)) {
+    if (!subject->write(subject_name)) {
       status = EXIT_FAILURE;
-      log("could not write image '" + dest_name + "'\n", 3);
+      log("could not write image '" + subject_name + "'\n", 3);
     } else {
-      count++;
+      count++; // saving was successful, increment the counter
     }
     delete subject; // which will delete dest if it was not nullptr
   }
@@ -443,7 +446,7 @@ static ssize_t process(const struct process_args p_args) {
   if (err == EOF) {
     status = EXIT_FAILURE;
     log("could not parse config file for image '" + img_path + "'\n", 3);
-  }
+  } // sscanf failed, break fallthrough
 
   try {
     cfg_file.close();
@@ -454,10 +457,10 @@ static ssize_t process(const struct process_args p_args) {
         3);
   }
 
-  switch (status) {
-  case EXIT_FAILURE:
+  if (status == EXIT_FAILURE) {
+    // instead of returning the status and then loging the error
+    // we acknowledge errors and return the number of correctly saved images
     log("error(s) processing image '" + img_name + img_ext + "'\n", 3);
-    break;
   }
 
   return count;
@@ -483,6 +486,8 @@ int App::run() {
   thread_pool tp(std::min(_max_threads, n));
   std::vector<std::future<ssize_t>> futures(n);
 
+  // constant parameters for all images
+
   struct process_args p_args;
   p_args.out_path = _path_to_output_folder + '/';
   p_args.img_ext = _image_ext;
@@ -505,29 +510,31 @@ int App::run() {
     std::string img_name_no_ext =
         img_name.substr(0, img_name.find_last_of('.'));
 
+    // some image specific parameters
+
     p_args.img_name = img_name_no_ext;
     p_args.img_path = _path_to_input_folder + '/' + img_name;
     p_args.cfg_path = _path_to_config_folder + '/';
 
-    futures[idx++] =
+    futures[idx++] = /* register future trait */
         tp.push(std::move([p_args](ssize_t) { return process(p_args); }));
   }
 
-  // wait for all the threads to finish
+  // wait for all threads to finish
   idx = 0;
   volatile unsigned progress = 0, last_progress = 0;
   const std::string desc = "Cutting Images" FG_WHT " \u2702 " RST;
   const std::string more = '[' + std::to_string(tp.size()) + ']';
 
-  ssize_t count = 0;
+  ssize_t count = 0; // number of images processed
   for (auto &f : futures) {
     count += f.get();
 
     idx++;
     progress = (idx * 100) / n;
     if (progress > last_progress) {
-      display_progress(idx, n, desc, more);
-      last_progress = progress;
+      display_progress(idx, n, desc, more); // need to add endl after
+      last_progress = progress; // only update if progress has changed
     }
   }
 
