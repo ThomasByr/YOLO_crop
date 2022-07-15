@@ -55,7 +55,7 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
      << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n"
      << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
         "(defaults to no size restriction)\n"
-     << "  , --rctg\t\t\tuse rectangle as an inside crop shape\n"
+     << "  , --rect\t\t\tuse rectangle as an inside crop shape\n"
      << "  , --squr\t\t\tuse square as an inside crop shape\n"
      << "  , --crcl\t\t\tuse circle as an inside crop shape\n"
      << "  , --llps\t\t\tuse ellipse as an inside crop shape\n"
@@ -122,7 +122,7 @@ App::App(int argc, char *argv[]) {
         {"ext", required_argument, nullptr, 'e'},
         {"thrds", required_argument, nullptr, 't'},
         {"siz", required_argument, nullptr, 's'},
-        {"rctg", no_argument, nullptr, OPT_RCTG},
+        {"rect", no_argument, nullptr, OPT_RECT},
         {"squr", no_argument, nullptr, OPT_SQUR},
         {"crcl", no_argument, nullptr, OPT_CRCL},
         {"llps", no_argument, nullptr, OPT_LLPS},
@@ -163,7 +163,7 @@ App::App(int argc, char *argv[]) {
         panic("invalid argument for --siz from " + std::string(optarg));
       }
       break;
-    case OPT_RCTG:
+    case OPT_RECT:
       _image_shape = ImageShape::rectangle;
       break;
     case OPT_SQUR:

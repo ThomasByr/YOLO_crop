@@ -53,7 +53,7 @@
 
 // this is for long options with no short option equivalent
 
-#define OPT_RCTG 1000 + 1 // rectangle
+#define OPT_RECT 1000 + 1 // rectangle
 #define OPT_SQUR 1000 + 2 // square
 #define OPT_CRCL 1000 + 3 // circle
 #define OPT_LLPS 1000 + 4 // ellipse
