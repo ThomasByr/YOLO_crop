@@ -49,7 +49,7 @@ The program takes command line arguments from (`..` indicating no short option) 
 - `-e, --ext` : image file extension (defaults to .png)
 - `-t, --thrds` : max number of threads (defaults to 8)
 - `-s, --siz` : specific size of the objects (defaults to no size restriction)
-- `.., --rctg` : use rectangle a an insides crop shape
+- `.., --rect` : use rectangle a an insides crop shape
 - `.., --squr` : use square as an inside crop shape
 - `.., --crcl` : use circle as an inside crop shape
 - `.., --llps` : use ellipse as an inside crop shape
