@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # -*- coding: utf-8 -*-
 
-echo "> running tests..."
+printf "\n\033[96m> running tests...\033[0m\n\n"
 
 # check if valgrind is installed
 if ! which valgrind >/dev/null; then
-  echo "> valgrind is not installed"
+  printf "\n\033[96m> valgrind is not installed\033[0m\n\n"
   exit 1
 fi
 
@@ -13,11 +13,11 @@ fi
 cd tests || exit 1
 
 # run tests
-make check
+make check || exit 1
 
 # clean up
 make clean && cd ..
 
 # building the project
-echo "> tests done : building..."
-make clean && make release
+printf "\n\033[96m> tests done : building...\033[0m\n\n"
+make clean && make generic
