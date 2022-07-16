@@ -107,18 +107,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 > For obvious reasons, some feature were not reported here and have been remove from git entirely.
 
-**v0** - basic crop
+`v0` - basic crop
 
 - we cropped images using a fixed sized rectangle
 - use of OpenCV
 
-**v1** - home-made image processing wizardry
+`v1` - home-made image processing wizardry
 
 - grabbed stb_image code headers
 - cpp thread pool implementation using basic thread, future and mutex
 - implemented basic size selection
 
-**v2** - cropping shapes
+`v2` - cropping shapes
 
 - choosing from square, rectangle, circle and ellipse
 - static type cast
