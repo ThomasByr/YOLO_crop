@@ -431,7 +431,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
 
     // save the image
     const std::string subject_name =
-        out_path + img_name + '_' + std::to_string(_cls) + '_' +
+        out_path + img_name + '(' + std::to_string(_cls) + ')' +
         std::to_string(center_x) + '_' + std::to_string(center_y) + '[' +
         std::to_string(count) + ']' + img_ext;
     if (!subject->write(subject_name)) {
@@ -451,7 +451,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
 
   if (cfg_file.is_open()) {
     cfg_file.close();
-    if (cfg_file.fail()) {
+    if (cfg_file.fail() && !cfg_file.eof()) {
       status = EXIT_FAILURE;
       log("could not close config file '" + cfg_path + img_name + ".txt'\n",
           LogLevel::error);
@@ -485,7 +485,7 @@ int App::run() {
   log("found " + std::to_string(n) + " images\n", LogLevel::info);
 
   // thread pool
-  thread_pool tp(std::min(_max_threads, n));
+  thread_pool tp(_max_threads);
   std::vector<std::future<ssize_t>> futures(n);
 
   // constant parameters for all images
@@ -532,8 +532,7 @@ int App::run() {
   for (auto &f : futures) {
     count += f.get();
 
-    idx++;
-    progress = (idx * 100) / n;
+    progress = (++idx * 100) / n;
     if (progress > last_progress) {
       display_progress(idx, n, desc, more); // need to add endl after
       last_progress = progress; // only update if progress has changed
