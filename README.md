@@ -49,6 +49,7 @@ The program takes command line arguments from (`..` indicating no short option) 
 - `-e, --ext` : image file extension (defaults to .png)
 - `-t, --thrds` : max number of threads (defaults to 8)
 - `-s, --size` : specific size of the objects (defaults to no size restriction)
+- `-p, --padd` : add a little padding to the bounding box (defaults to 0)
 - `.., --rect` : use rectangle a an insides crop shape
 - `.., --squr` : use square as an inside crop shape
 - `.., --crcl` : use circle as an inside crop shape
@@ -56,7 +57,6 @@ The program takes command line arguments from (`..` indicating no short option) 
 - `-b, --bg` : background image (defaults to none)
 - `.., --clss` : only look for the specified class (defaults to all)
 - `.., --cnfd` : specify a minimum confidence threshold (defaults to .5)
-- `-p, --padd` : add a little padding to the bounding box (defaults to 0)
 
 The specific size input should match the following pattern : `"min, max, w, h"`, which will result in the following behavior. The program will only crop around objects whose minimum size (the minimum between the width and the height of the rectangle defined by YOLO) is greater than or equal to `min`, and maximum size (same thing) is less than or equal to `max`. It will then crop the objects around their center with a new rectangle of width `w` and height `h`. If both `w` and `h` are unspecified, the new rectangle's dimensions will match the one defined by YOLO. If there is only one value specified (let's say that only `w` is specified), the program will crop according to the square of width `w`. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
 
