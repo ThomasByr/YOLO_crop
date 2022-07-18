@@ -39,13 +39,32 @@ public:
   bool write(const std::string &path) const;
 
   /**
-   * @brief crop the image and return a new image
+   * @brief crop the image according to the rectangle and return a new image
    *
    * @param x top-left x coordinate
    * @param y top-left y coordinate
    * @param width width of the cropped image
    * @param height height of the cropped image
-   * @return Image& - reference to the cropped image
+   * @param bg background image to fill the cropped area with
+   * @param bw background image width
+   * @param bh background image height
+   * @return Image* - the cropped image
    */
-  Image *crop(int x, int y, int width, int height) const;
+  Image *crop_rect(int x, int y, int width, int height, Image *bg = nullptr,
+                   int bw = EOF, int bh = EOF) const;
+
+  /**
+   * @brief crop the image accorging to the ellipse and return a new image
+   *
+   * @param x top-left x coordinate
+   * @param y top-left y coordinate
+   * @param width width of the cropped image
+   * @param height height of the cropped image
+   * @param bg background image to fill the cropped area with
+   * @param bw background image width
+   * @param bh background image height
+   * @return Image* - the cropped image
+   */
+  Image *crop_ellipse(int x, int y, int width, int height, Image *bg = nullptr,
+                      int bw = EOF, int bh = EOF) const;
 };

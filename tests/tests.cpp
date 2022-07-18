@@ -35,7 +35,7 @@ void memory_test_1(void) {
 void memory_test_2(void) {
   const Image image = Image(1920, 1080);
   for (int i = 0; i < N; i++) {
-    const Image *c = image.crop(0, 0, 64, 64);
+    const Image *c = image.crop_rect(0, 0, 64, 64);
     assert_neq(c, nullptr);
     assert_eq(c->width(), 64);
     assert_eq(c->height(), 64);
@@ -49,7 +49,7 @@ void memory_test_3(void) {
   const Image image = Image(1920, 1080);
   std::vector<Image *> v;
   for (int i = 0; i < N; i++) {
-    v.push_back(image.crop(0, 0, 64, 64));
+    v.push_back(image.crop_rect(0, 0, 64, 64));
   }
   for (int i = 0; i < N; i++) {
     assert_neq(v[i], nullptr);
@@ -75,7 +75,7 @@ void crop_test_0(void) {
     }
   }
   for (int i = 0; i < w; i++) {
-    const Image *c = image.crop(0, i, w, 1);
+    const Image *c = image.crop_rect(0, i, w, 1);
     assert_neq(c, nullptr);
     assert_eq(c->width(), w);
     assert_eq(c->height(), 1);
@@ -94,7 +94,7 @@ void crop_test_1(void) {
   const int w = image.width();
   const int h = image.height();
 
-  const Image *c = image.crop(0, 0, 2 * w, 2 * h);
+  const Image *c = image.crop_rect(0, 0, 2 * w, 2 * h);
   assert_neq(c, nullptr);
   assert_eq(c->width(), 2 * w);
   assert_eq(c->height(), 2 * h);
@@ -117,7 +117,7 @@ void test_crop_2(void) {
 
   for (unsigned i = 0; i < n_images; i++) {
     futures[i] = pool.push([&image, w, h](int) {
-      const Image *c = image.crop(-w, -h, 3 * w, 3 * h);
+      const Image *c = image.crop_rect(-w, -h, 3 * w, 3 * h);
       assert_neq(c, nullptr);
       assert_eq(c->width(), 3 * w);
       assert_eq(c->height(), 3 * h);
@@ -140,14 +140,7 @@ void app_test_0(void) {
                   (char *)nullptr};
   App app = App(9, argv);
   app.check_args();
-  assert(app.path_to_input_folder().compare("../in") == 0);
-  assert(app.path_to_output_folder().compare("../out") == 0);
-  assert(app.image_ext().compare(".jpg") == 0);
-  assert(app.path_to_config_folder().compare("../in") == 0);
-  assert_eq(app.min_object_size(), 30);
-  assert_eq(app.max_object_size(), 60);
-  assert_eq(app.target_width(), 64);
-  assert_eq(app.target_height(), 64);
+  assert_eq(count_files_in_folder("../lib"), 3);
 }
 
 void app_test_1(void) {

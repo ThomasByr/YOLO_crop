@@ -19,10 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: make generic
+      - name: Install Valgrind
         run: |
-          make generic
-          echo "Generic build done!"
+          sudo apt install valgrind > /dev/null
+          echo "Valgrind installed!"
+
+      - name: setup
+        run: ./setup.bash
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2

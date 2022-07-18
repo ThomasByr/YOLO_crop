@@ -20,6 +20,19 @@ private:
   // max number of threads to use for processing
   unsigned _max_threads = 8;
 
+  // image shape to crop to
+  ImageShape _image_shape = ImageShape::undefined;
+
+  // path to the background image to use for cropping
+  std::string _path_to_background_image;
+
+  // minimum confidence threshold for detection
+  double _min_confidence = 0.5;
+
+  // class id to use for detection
+  int _class_id = EOF;
+  bool _class_id_is_set = false;
+
   // minimum size of the object to be processed
   int _min_object_size = EOF;
   // maximum size of the object to be processed
@@ -42,17 +55,6 @@ public:
    *
    */
   ~App();
-
-  const std::string &path_to_input_folder() const;
-  const std::string &path_to_output_folder() const;
-  const std::string &path_to_config_folder() const;
-  const bool &config_folder_is_input_folder() const;
-  const std::string &image_ext() const;
-  const unsigned &max_threads() const;
-  const int &min_object_size() const;
-  const int &max_object_size() const;
-  const int &target_width() const;
-  const int &target_height() const;
 
   /**
    * @brief check all the arguments against a set of rules
