@@ -247,7 +247,7 @@ void App::check_args() {
   if (_max_object_size != EOF && _max_object_size < 0) {
     print_help("maximum object size must be >= 0\n");
   }
-  if (_min_object_size < 0 && _max_object_size < 0 &&
+  if (_min_object_size > 0 && _max_object_size > 0 &&
       _min_object_size > _max_object_size) {
     print_help("minimum object size must be <= maximum object size\n");
   }
@@ -256,6 +256,18 @@ void App::check_args() {
   }
   if (_target_height != EOF && _target_height < 0) {
     print_help("target height must be >= 0\n");
+  }
+  if (_horizontal_padding > 0 && _vertical_padding == EOF) {
+    _vertical_padding = _horizontal_padding;
+  }
+  if (_horizontal_padding == EOF && _vertical_padding > 0) {
+    _horizontal_padding = _vertical_padding;
+  }
+  if (_horizontal_padding != EOF && _horizontal_padding < 0) {
+    print_help("horizontal padding must be >= 0\n");
+  }
+  if (_vertical_padding != EOF && _vertical_padding < 0) {
+    print_help("vertical padding must be >= 0\n");
   }
   if (_min_confidence < 0 || _min_confidence > 1) {
     print_help("minimum confidence must be between 0 and 1\n");
