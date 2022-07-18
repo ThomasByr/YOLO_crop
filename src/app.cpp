@@ -53,7 +53,7 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
      << "-c, --cfg\t\t\tconfig folder (defaults to the input folder)\n"
      << "-e, --ext\t\t\timage file extension (defaults to .png)\n"
      << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n"
-     << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
+     << "-s, --size\t\t\tspecified size from \"min, max, w, h\" "
         "(defaults to no size restriction)\n"
      << "  , --rect\t\t\tuse rectangle as an inside crop shape\n"
      << "  , --squr\t\t\tuse square as an inside crop shape\n"
@@ -62,7 +62,9 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
      << "-b, --bg\t\t\tbackground image (defaults to none)\n"
      << "  , --clss\t\t\tonly look for the specified class (defaults to all)\n"
      << "  , --cnfd\t\t\tspecify a minimum confidence threshold "
-        "(defaults to .5)\n";
+        "(defaults to .5)\n"
+     << "-p, --padd\t\t\tadd a little padding to the bounding box "
+        "(defaults to 0)";
 
   std::cout << ss.str() << std::flush;
   std::exit(status);
@@ -121,7 +123,7 @@ App::App(int argc, char *argv[]) {
         {"cfg", required_argument, nullptr, 'c'},
         {"ext", required_argument, nullptr, 'e'},
         {"thrds", required_argument, nullptr, 't'},
-        {"siz", required_argument, nullptr, 's'},
+        {"size", required_argument, nullptr, 's'},
         {"rect", no_argument, nullptr, OPT_RECT},
         {"squr", no_argument, nullptr, OPT_SQUR},
         {"crcl", no_argument, nullptr, OPT_CRCL},
@@ -129,10 +131,12 @@ App::App(int argc, char *argv[]) {
         {"bg", required_argument, nullptr, 'b'},
         {"clss", required_argument, nullptr, OPT_CLSS},
         {"cnfd", required_argument, nullptr, OPT_CNFD},
+        {"padd", required_argument, nullptr, 'p'},
+        {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'v'},
         {"license", no_argument, nullptr, 'l'}, {nullptr, 0, nullptr, 0},
   };
-  static const char *short_options = "i:o:c:e:t:s:b:hvl";
+  static const char *short_options = "i:o:c:e:t:s:b:p:hvl";
 
   std::string bad_opt;
   std::stringstream ss;
@@ -184,6 +188,12 @@ App::App(int argc, char *argv[]) {
       break;
     case OPT_CNFD:
       _min_confidence = std::stod(optarg);
+      break;
+    case 'p':
+      err = sscanf(optarg, "%d, %d", &_horizontal_padding, &_vertical_padding);
+      if (err == EOF) {
+        panic("invalid argument for --padd from " + std::string(optarg));
+      }
       break;
     case 'h':
       print_help();

@@ -33,6 +33,11 @@ private:
   int _class_id = EOF;
   bool _class_id_is_set = false;
 
+  // horizontal padding to the bounding box
+  int _horizontal_padding = EOF;
+  // vertical padding to the bounding box
+  int _vertical_padding = EOF;
+
   // minimum size of the object to be processed
   int _min_object_size = EOF;
   // maximum size of the object to be processed
