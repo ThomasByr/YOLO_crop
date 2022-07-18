@@ -15,7 +15,7 @@ BINDIR       = bin
 
 SOURCES     := $(wildcard $(SRCDIR)/*.$(FILEXT))
 INCLUDES    := $(wildcard $(INCLUDE_PATH)/*.h)
-LIBS        := $(wildcard $(LIB_PATH)/*.h) $(wildcard $(LIB_PATH)/*.hpp)
+LIBS        := $(wildcard $(LIB_PATH)/*.h|*.hpp)
 OBJECTS     := $(SOURCES:$(SRCDIR)/%.$(FILEXT)=$(OBJDIR)/%.o)
 
 PATH_TO_EXE  = $(BINDIR)/$(TARGET)
