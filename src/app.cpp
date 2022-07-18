@@ -55,6 +55,8 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
      << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n"
      << "-s, --size\t\t\tspecified size from \"min, max, w, h\" "
         "(defaults to no size restriction)\n"
+     << "-p, --padd\t\t\tadd a little padding to the bounding box "
+        "(defaults to 0)\n"
      << "  , --rect\t\t\tuse rectangle as an inside crop shape\n"
      << "  , --squr\t\t\tuse square as an inside crop shape\n"
      << "  , --crcl\t\t\tuse circle as an inside crop shape\n"
@@ -62,9 +64,7 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
      << "-b, --bg\t\t\tbackground image (defaults to none)\n"
      << "  , --clss\t\t\tonly look for the specified class (defaults to all)\n"
      << "  , --cnfd\t\t\tspecify a minimum confidence threshold "
-        "(defaults to .5)\n"
-     << "-p, --padd\t\t\tadd a little padding to the bounding box "
-        "(defaults to 0)";
+        "(defaults to .5)\n";
 
   std::cout << ss.str() << std::flush;
   std::exit(status);
