@@ -59,12 +59,13 @@ The program takes command line arguments from (`..` indicating no short option) 
 - `-b, --bg` : background image (defaults to none)
 - `.., --clss` : only look for the specified class (defaults to all)
 - `.., --cnfd` : specify a minimum confidence threshold (defaults to .5)
+- `.., --trgt` : target minimum number of images to generate (defaults to no restriction)
 
 The specific size input should match the following pattern : `"min, max, w, h"`, which will result in the following behavior. The program will only crop around objects whose minimum size (the minimum between the width and the height of the rectangle defined by YOLO) is greater than or equal to `min`, and maximum size (same thing) is less than or equal to `max`. It will then crop the objects around their center with a new rectangle of width `w` and height `h`. If both `w` and `h` are unspecified, the new rectangle's dimensions will match the one defined by YOLO. If there only the first value is specified (only `w` is specified), the program will crop according to the square of width `w`. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
 
 Additionally, since v2, you can crop in a variety of new ways. At the time of writing, you can choose between `rectangle`, `square`, `circle` and `ellipse`. All previous four shapes only apply to the bounding box defined by YOLO. It works as follow : if you do not specify any shape and force the cropped size, the program will crop the original image with that size, around the center point defined by the bounding box. Then if you do specify any shape, it will crop according to that shape whose dimensions are defined by the **outer rectangle** bounding box. It is up to you to force the dimension of the final image, which, if you choose from either circle or ellipse, is guarantied to have rounded black corners. This you can avoid by specifying a path to a background default image (this argument will only eliminate dark edges when cropping outside of the original image when used with no specific shape). Note that the background image locks the number of channels used for image processing. The program will first crop the background image to the desired size (either the one you chose or the one defined by the bounding box) at the center of the background image, and then copy the YOLO-recognized subject above it, according to the shape. No checks are performed regarding the size of the background image, you might want to supply one large enough.
 
-In v3, I added optional additional padding to the bounding box. It works as the size, the pattern is as follow `"horizontal, vertical"` ; and, if only one value is supplied, the vertical padding will equal the vertical automatically. Horizontal padding actually represents left and right padding, so setting it to 1 will add a left and right padding of 1 ; the same applies to vertical padding. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
+In v3, I added optional additional padding to the bounding box. It works as the size, the pattern is as follow `"horizontal, vertical"` ; and, if only one value is supplied, the vertical padding will equal the vertical automatically. Horizontal padding actually represents left and right padding, so setting it to 1 will add a left and right padding of 1 ; the same applies to vertical padding. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined. In addition, you can specify a minimum amount of images to generate using `--trgt`. The program will terminate immediately after that threshold (this can be useful for debugging with a small amount of images). Setting this to zero will result in only one valid source image to be cropped.
 
 So, a legal launching instruction could be :
 
@@ -134,6 +135,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 - option to add a little padding horizontally or vertically
 - command line issue fix
+- added minimum image generation target
 
 ## 🐛 Bugs & TODO
 
