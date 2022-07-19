@@ -28,6 +28,8 @@ Please make sure you do run a recent enough version of Linux, `g++ >= 4.8.5 w/ C
 
 This program takes images as input, as well as a config file, which are basically rectangles outputs from YOLO (which is a shape detection neural network). It then loop through all objects in the config file, optionally ignoring those whose size isn't in a specific range, and create new images cropping the original one.
 
+All units of mesurement (excluding internal representation and the config text file) are relative to the pixel array.
+
 Compile a release version of the program with :
 
 ```bash
@@ -62,7 +64,7 @@ The specific size input should match the following pattern : `"min, max, w, h"`,
 
 Additionally, since v2, you can crop in a variety of new ways. At the time of writing, you can choose between `rectangle`, `square`, `circle` and `ellipse`. All previous four shapes only apply to the bounding box defined by YOLO. It works as follow : if you do not specify any shape and force the cropped size, the program will crop the original image with that size, around the center point defined by the bounding box. Then if you do specify any shape, it will crop according to that shape whose dimensions are defined by the **outer rectangle** bounding box. It is up to you to force the dimension of the final image, which, if you choose from either circle or ellipse, is guarantied to have rounded black corners. This you can avoid by specifying a path to a background default image (this argument will only eliminate dark edges when cropping outside of the original image when used with no specific shape). Note that the background image locks the number of channels used for image processing. The program will first crop the background image to the desired size (either the one you chose or the one defined by the bounding box) at the center of the background image, and then copy the YOLO-recognized subject above it, according to the shape. No checks are performed regarding the size of the background image, you might want to supply one large enough.
 
-In v3, I added optional additional padding to the bounding box. It works as the size, the pattern is as follow `"horizontal, vertical"` ; and, if only one value is supplied, the vertical padding will equal the vertical automatically. To force only one of the two dimensions, please set one zo zero ; setting values to your system's `EOF` will let them undefined.
+In v3, I added optional additional padding to the bounding box. It works as the size, the pattern is as follow `"horizontal, vertical"` ; and, if only one value is supplied, the vertical padding will equal the vertical automatically. Horizontal padding actually represents left and right padding, so setting it to 1 will add left and right padding of 1 ; the same applied to vertical padding. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
 
 So, a legal launching instruction could be :
 
