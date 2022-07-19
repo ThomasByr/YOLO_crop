@@ -64,7 +64,9 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
      << "-b, --bg\t\t\tbackground image (defaults to none)\n"
      << "  , --clss\t\t\tonly look for the specified class (defaults to all)\n"
      << "  , --cnfd\t\t\tspecify a minimum confidence threshold "
-        "(defaults to .5)\n";
+        "(defaults to .5)\n"
+     << "  ,--trgt\t\t\t: target minimum number of images to generate "
+        "(defaults to no restriction)\n";
 
   std::cout << ss.str() << std::flush;
   std::exit(status);
@@ -124,6 +126,7 @@ App::App(int argc, char *argv[]) {
         {"ext", required_argument, nullptr, 'e'},
         {"thrds", required_argument, nullptr, 't'},
         {"size", required_argument, nullptr, 's'},
+        {"padd", required_argument, nullptr, 'p'},
         {"rect", no_argument, nullptr, OPT_RECT},
         {"squr", no_argument, nullptr, OPT_SQUR},
         {"crcl", no_argument, nullptr, OPT_CRCL},
@@ -131,7 +134,7 @@ App::App(int argc, char *argv[]) {
         {"bg", required_argument, nullptr, 'b'},
         {"clss", required_argument, nullptr, OPT_CLSS},
         {"cnfd", required_argument, nullptr, OPT_CNFD},
-        {"padd", required_argument, nullptr, 'p'},
+        {"trgt", required_argument, nullptr, OPT_TRGT},
         {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'v'},
         {"license", no_argument, nullptr, 'l'}, {nullptr, 0, nullptr, 0},
@@ -188,6 +191,10 @@ App::App(int argc, char *argv[]) {
       break;
     case OPT_CNFD:
       _min_confidence = std::stod(optarg);
+      break;
+    case OPT_TRGT:
+      _min_target_images = std::stol(optarg);
+      _min_target_images_is_set = true;
       break;
     case 'p':
       err = sscanf(optarg, "%d, %d", &_horizontal_padding, &_vertical_padding);
@@ -269,11 +276,19 @@ void App::check_args() {
   if (_vertical_padding != EOF && _vertical_padding < 0) {
     print_help("vertical padding must be >= 0\n");
   }
+  // if ((_vertical_padding > 0 || _horizontal_padding > 0) &&
+  //     (_min_object_size <= 0 || _max_object_size <= 0)) {
+  //   print_help("padding requires at least one of minimum or maximum object "
+  //              "size to be > 0\n");
+  // }
   if (_min_confidence < 0 || _min_confidence > 1) {
     print_help("minimum confidence must be between 0 and 1\n");
   }
   if (_class_id_is_set && _class_id < 0) {
     print_help("please let class id be EOF by not setting --clss manually\n");
+  }
+  if (_min_target_images_is_set && _min_target_images < 0) {
+    print_help("please let target id be EOF by not setting --trgt manually\n");
   }
 
   switch (get_img_type(_image_ext)) {
@@ -303,7 +318,8 @@ void create_dir(const std::string &path) {
 /// @brief holds the necessary information for a single image
 struct process_args {
   std::string img_path, cfg_path, out_path, img_name, img_ext;
-  int min_object_size, max_object_size, target_width, target_height, class_id;
+  int min_object_size, max_object_size, target_width, target_height,
+      horizontal_padding, vertical_padding, class_id;
   double min_confidence;
   ImageShape image_shape;
   Image *background_image;
@@ -311,8 +327,9 @@ struct process_args {
   process_args()
       : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
         min_object_size(EOF), max_object_size(EOF), target_width(EOF),
-        target_height(EOF), class_id(EOF), min_confidence(0.5),
-        image_shape(ImageShape::undefined), background_image(nullptr) {}
+        target_height(EOF), horizontal_padding(EOF), vertical_padding(EOF),
+        class_id(EOF), min_confidence(0.5), image_shape(ImageShape::undefined),
+        background_image(nullptr) {}
 };
 
 static ssize_t process(const struct process_args p_args /* copy */) {
@@ -325,10 +342,23 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   const int max_object_size = p_args.max_object_size;
   const int target_width = p_args.target_width;
   const int target_height = p_args.target_height;
+  const int horizontal_padding = p_args.horizontal_padding;
+  const int vertical_padding = p_args.vertical_padding;
   const int class_id = p_args.class_id;
   const ImageShape image_shape = p_args.image_shape;
   const Image *background_image = p_args.background_image;
-  double min_confidence = p_args.min_confidence;
+  const double min_confidence = p_args.min_confidence;
+
+  const int min_padding =
+      std::min((horizontal_padding == EOF) ? 0 : horizontal_padding,
+               (vertical_padding == EOF) ? 0 : vertical_padding);
+  const int max_padding =
+      std::max((horizontal_padding == EOF) ? 0 : horizontal_padding,
+               (vertical_padding == EOF) ? 0 : vertical_padding);
+  const int min_size =
+      (min_object_size == EOF) ? 0 : min_object_size + 2 * min_padding;
+  const int max_size =
+      (max_object_size == EOF) ? 0 : max_object_size + 2 * max_padding;
 
   // img_path = "./data/test/test.png"
   // cfg_path = "./data/test/test.json"
@@ -336,7 +366,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   // img_name = "test"
   // img_ext  = ".png"
 
-  ssize_t count = 0;
+  volatile ssize_t count = 0;
   int status = EXIT_SUCCESS, err = 0;
   int channel_force =
       background_image != nullptr ? background_image->channels() : 0;
@@ -390,14 +420,16 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     if (class_id != EOF && _cls != class_id) continue;
     if (_score < min_confidence) continue;
 
-    _width = round_to_int(lerp(0, w, _w));
-    _height = round_to_int(lerp(0, h, _h));
+    _width = round_to_int(lerp(0, w, _w)) +
+             (horizontal_padding == EOF ? 0 : horizontal_padding * 2);
+    _height = round_to_int(lerp(0, h, _h)) +
+              (vertical_padding == EOF ? 0 : vertical_padding * 2);
     _r = std::min(_width, _height);
 
-    if (min_object_size > 0 && min_object_size > std::min(_width, _height)) {
+    if (min_object_size > 0 && min_size > std::min(_width, _height)) {
       continue;
     }
-    if (max_object_size > 0 && max_object_size < std::max(_width, _height)) {
+    if (max_object_size > 0 && max_size < std::max(_width, _height)) {
       continue;
     }
 
@@ -520,6 +552,8 @@ int App::run() {
   p_args.target_width = _target_width;
   p_args.target_height = _target_height;
   p_args.image_shape = _image_shape;
+  p_args.horizontal_padding = _horizontal_padding;
+  p_args.vertical_padding = _vertical_padding;
   p_args.class_id = _class_id;
   p_args.min_confidence = _min_confidence;
 
@@ -550,9 +584,11 @@ int App::run() {
   const std::string desc = "Cutting Images" FG_WHT " \u2702 " RST;
   const std::string more = '[' + std::to_string(tp.size()) + ']';
 
-  ssize_t count = 0; // number of images processed
+  volatile ssize_t count = 0;              // number of images processed
+  const ssize_t trgt = _min_target_images; // target number of images
   for (auto &f : futures) {
     count += f.get();
+    if (trgt != EOF && count > trgt) break;
 
     progress = (++idx * 100) / n;
     if (progress > last_progress) {
@@ -586,10 +622,13 @@ std::ostream &operator<<(std::ostream &os, const App &app) {
      << "maximum object size: " << app._max_object_size << '\n'
      << "target width: " << app._target_width << '\n'
      << "target height: " << app._target_height << '\n'
+     << "horizontal padding: " << app._horizontal_padding << '\n'
+     << "vertical padding: " << app._vertical_padding << '\n'
      << "custom crop shape: " << app._image_shape << '\n'
      << "path to background image: " << app._path_to_background_image << '\n'
      << "selected class id: " << app._class_id << '\n'
-     << "minimum confidence score: " << app._min_confidence << '\n';
+     << "minimum confidence score: " << app._min_confidence << '\n'
+     << "target minimum number of images: " << app._min_target_images << '\n';
 
   return os;
 }

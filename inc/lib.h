@@ -60,6 +60,7 @@
 
 #define OPT_CLSS 2000 + 1 // class
 #define OPT_CNFD 2000 + 2 // confidence
+#define OPT_TRGT 2000 + 3 // target
 
 // debug level only when DEBUG is defined
 

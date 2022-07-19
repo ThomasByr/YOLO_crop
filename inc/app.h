@@ -38,6 +38,10 @@ private:
   // vertical padding to the bounding box
   int _vertical_padding = EOF;
 
+  // minimum target number of images to generate
+  ssize_t _min_target_images = EOF;
+  bool _min_target_images_is_set = false;
+
   // minimum size of the object to be processed
   int _min_object_size = EOF;
   // maximum size of the object to be processed
