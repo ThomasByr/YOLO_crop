@@ -145,7 +145,7 @@ std::string repeat(std::string str, const unsigned n);
  */
 std::string operator*(std::string str, const unsigned n);
 
-enum struct LogLevel { debug, info, warn, error };
+enum struct LogLevel { debug, info, warning, error };
 
 /**
  * @brief outputs a string to stdout on a given level
