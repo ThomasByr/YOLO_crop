@@ -57,8 +57,8 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
         "(defaults to no size restriction)\n"
      << "-p, --padd\t\t\tadd a little padding to the bounding box "
         "(defaults to 0)\n"
-     << "  , --rect\t\t\tuse rectangle as an inside crop shape\n"
      << "  , --squr\t\t\tuse square as an inside crop shape\n"
+     << "  , --rect\t\t\tuse rectangle as an inside crop shape\n"
      << "  , --crcl\t\t\tuse circle as an inside crop shape\n"
      << "  , --llps\t\t\tuse ellipse as an inside crop shape\n"
      << "-b, --bg\t\t\tbackground image (defaults to none)\n"
@@ -276,11 +276,6 @@ void App::check_args() {
   if (_vertical_padding != EOF && _vertical_padding < 0) {
     print_help("vertical padding must be >= 0\n");
   }
-  // if ((_vertical_padding > 0 || _horizontal_padding > 0) &&
-  //     (_min_object_size <= 0 || _max_object_size <= 0)) {
-  //   print_help("padding requires at least one of minimum or maximum object "
-  //              "size to be > 0\n");
-  // }
   if (_min_confidence < 0 || _min_confidence > 1) {
     print_help("minimum confidence must be between 0 and 1\n");
   }
@@ -320,6 +315,7 @@ struct process_args {
   std::string img_path, cfg_path, out_path, img_name, img_ext;
   int min_object_size, max_object_size, target_width, target_height,
       horizontal_padding, vertical_padding, class_id;
+  unsigned img_num;
   double min_confidence;
   ImageShape image_shape;
   Image *background_image;
@@ -328,8 +324,8 @@ struct process_args {
       : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
         min_object_size(EOF), max_object_size(EOF), target_width(EOF),
         target_height(EOF), horizontal_padding(EOF), vertical_padding(EOF),
-        class_id(EOF), min_confidence(0.5), image_shape(ImageShape::undefined),
-        background_image(nullptr) {}
+        class_id(EOF), img_num(0), min_confidence(0.5),
+        image_shape(ImageShape::undefined), background_image(nullptr) {}
 };
 
 static ssize_t process(const struct process_args p_args /* copy */) {
@@ -348,6 +344,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   const ImageShape image_shape = p_args.image_shape;
   const Image *background_image = p_args.background_image;
   const double min_confidence = p_args.min_confidence;
+  const unsigned img_num = p_args.img_num;
 
   const int min_padding =
       std::min((horizontal_padding == EOF) ? 0 : horizontal_padding,
@@ -485,9 +482,9 @@ static ssize_t process(const struct process_args p_args /* copy */) {
 
     // save the image
     const std::string subject_name =
-        out_path + img_name + '(' + std::to_string(_cls) + ')' +
-        std::to_string(center_x) + '_' + std::to_string(center_y) + '[' +
-        std::to_string(count) + ']' + img_ext;
+        out_path + img_name + '_' + std::to_string(_cls) + '_' +
+        std::to_string(center_x) + '_' + std::to_string(center_y) + '_' +
+        std::to_string(count) + '_' + std::to_string(img_num) + img_ext;
     if (!subject->write(subject_name)) {
       status = EXIT_FAILURE;
       log("could not write image '" + subject_name + "'\n", LogLevel::error);
@@ -570,6 +567,8 @@ int App::run() {
 
     // some image specific parameters
 
+    p_args.img_num = idx;
+
     p_args.img_name = img_name_no_ext;
     p_args.img_path = _path_to_input_folder + '/' + img_name;
     p_args.cfg_path = _path_to_config_folder + '/';
@@ -588,7 +587,7 @@ int App::run() {
   const ssize_t trgt = _min_target_images; // target number of images
   for (auto &f : futures) {
     count += f.get();
-    if (trgt != EOF && count > trgt) break;
+    if (trgt != EOF && count > 0 && count >= trgt) break;
 
     progress = (++idx * 100) / n;
     if (progress > last_progress) {
@@ -607,6 +606,11 @@ int App::run() {
     delete p_args.background_image;
   }
   log("created " + std::to_string(count) + " images\n", LogLevel::info);
+
+  // if the number of generated images is less than the target number
+  if (count < trgt) {
+    log("could not create enough images\n", LogLevel::warning);
+  }
 
   return EXIT_SUCCESS;
 }

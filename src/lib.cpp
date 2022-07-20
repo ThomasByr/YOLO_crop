@@ -85,7 +85,7 @@ void log(const std::string &msg, const LogLevel level) {
     case LogLevel::info:
       std::cout << FG_CYN << "   info: " << RST;
       break;
-    case LogLevel::warn:
+    case LogLevel::warning:
       std::cout << FG_YEL << "   warn: " << RST;
       break;
     case LogLevel::error:
