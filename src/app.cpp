@@ -534,7 +534,10 @@ int App::run() {
   const unsigned n = imgs_files.size();
   unsigned idx = 0;
 
-  log("found " + std::to_string(n) + " images\n", LogLevel::info);
+  // figure out if we need a 's' at "image(s)"
+  const char sf = n > 1u ? 's' : ' ';
+
+  log("found " + std::to_string(n) + " image" + sf + '\n', LogLevel::info);
 
   // thread pool
   thread_pool tp(_max_threads);
@@ -606,7 +609,11 @@ int App::run() {
   if (p_args.background_image != nullptr) {
     delete p_args.background_image;
   }
-  log("created " + std::to_string(count) + " images\n", LogLevel::info);
+
+  // figure out if we need a 's' at "image(s)"
+  const char sc = count > 1l ? 's' : ' ';
+  log("created " + std::to_string(count) + " image" + sc + '\n',
+      LogLevel::info);
 
   // if the number of generated images is less than the target number
   if (count < trgt) {
