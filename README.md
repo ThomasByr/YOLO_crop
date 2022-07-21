@@ -40,26 +40,26 @@ The produced executable binary is to be found inside of the `bin` folder.
 
 ## 💁 More infos and Usage
 
-The program takes command line arguments from (`..` indicating no short option) :
+The program takes command line arguments from (`..` indicating no short option and `<>` that an argument is required) :
 
 - `-h, --help` : display this help and exit
 - `-v, --version` : display version and exit
 - `-l, --license` : display license and exit
-- `-i, --in` : input folder
-- `-o, --out` : output folder
-- `-c, --cfg` : config folder (defaults to the input folder)
-- `-e, --ext` : image file extension (defaults to .png)
-- `-t, --thrds` : max number of threads (defaults to 8)
-- `-s, --size` : specific size of the objects (defaults to no size restriction)
-- `-p, --padd` : add a little padding to the bounding box (defaults to 0)
+- `-i, --in <>` : input folder
+- `-o, --out <>` : output folder
+- `-c, --cfg <>` : config folder (defaults to the input folder)
+- `-e, --ext <>` : image file extension (defaults to .png)
+- `-t, --thrds <>` : max number of threads (defaults to 8)
+- `-s, --size <>` : specific size of the objects (defaults to no size restriction)
+- `-p, --padd <>` : add a little padding to the bounding box (defaults to 0)
 - `.., --squr` : use square as an inside crop shape
 - `.., --rect` : use rectangle a an insides crop shape
 - `.., --crcl` : use circle as an inside crop shape
 - `.., --llps` : use ellipse as an inside crop shape
-- `-b, --bg` : background image (defaults to none)
-- `.., --clss` : only look for the specified class (defaults to all)
-- `.., --cnfd` : specify a minimum confidence threshold (defaults to .5)
-- `.., --trgt` : target minimum number of images to generate (defaults to no restriction)
+- `-b, --bg <>` : background image (defaults to none)
+- `.., --clss <>` : only look for the specified class (defaults to all)
+- `.., --cnfd <>` : specify a minimum confidence threshold (defaults to .5)
+- `.., --trgt <>` : target minimum number of images to generate (defaults to no restriction)
 
 The specific size input should match the following pattern : `"min, max, w, h"`, which will result in the following behavior. The program will only crop around objects whose minimum size (the minimum between the width and the height of the rectangle defined by YOLO) is greater than or equal to `min`, and maximum size (same thing) is less than or equal to `max`. It will then crop the objects around their center with a new rectangle of width `w` and height `h`. If both `w` and `h` are unspecified, the new rectangle's dimensions will match the one defined by YOLO. If there only the first value is specified (only `w` is specified), the program will crop according to the square of width `w`. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
 
@@ -121,7 +121,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 `v1` - home-made image processing wizardry
 
 - grabbed stb_image code headers
-- cpp thread pool implementation using basic thread, future and mutex
+- cpp thread pool implementation using thread, future and mutex system calls
 - implemented basic size selection
 
 `v2` - cropping shapes
