@@ -65,7 +65,7 @@ The specific size input should match the following pattern : `"min, max, w, h"`,
 
 Additionally, since v2, you can crop in a variety of new ways. At the time of writing, you can choose between `rectangle`, `square`, `circle` and `ellipse`. All previous four shapes only apply to the bounding box defined by YOLO. It works as follow : if you do not specify any shape and force the cropped size, the program will crop the original image with that size, around the center point defined by the bounding box. Then if you do specify any shape, it will crop according to that shape whose dimensions are defined by the **outer rectangle** bounding box. It is up to you to force the dimension of the final image, which, if you choose from either circle or ellipse, is guarantied to have rounded black corners. This you can avoid by specifying a path to a background default image (this argument will only eliminate dark edges when cropping outside of the original image when used with no specific shape). Note that the background image locks the number of channels used for image processing. The program will first crop the background image to the desired size (either the one you chose or the one defined by the bounding box) at the center of the background image, and then copy the YOLO-recognized subject above it, according to the shape. No checks are performed regarding the size of the background image, you might want to supply one large enough.
 
-In v3, I added optional additional positive padding to the bounding box. It works as the size, the pattern is as follow `"horizontal, vertical"` ; and, if only one value is supplied, the vertical padding will equal the vertical automatically. Horizontal padding actually represents left and right padding, so setting it to 1 will add a left and right padding of 1 ; the same applies to vertical padding. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined. In addition, you can specify a minimum amount of images to generate using `--trgt`. The program will terminate immediately after that threshold (this can be useful for debugging with a small amount of images). Setting this to zero will result in only one valid source image to be cropped.
+In v3, I added optional additional positive padding to the bounding box. It works as the size, the pattern is `"horizontal, vertical"` ; and, if only one value is supplied, the vertical padding will equal the horizontal automatically. Horizontal padding actually represents left and right padding, so setting it to 1 will add a left and right padding of 1 ; the same applies to vertical padding. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined. In addition, you can specify a minimum amount of images to generate using `--trgt`. The program will terminate immediately after that threshold (this can be useful for debugging with a small amount of images). Setting this to zero will result in only one valid source image to be cropped.
 
 So, a legal launching instruction could be :
 
@@ -136,6 +136,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 - option to add a little padding horizontally or vertically
 - command line issue fix
 - added minimum image generation target
+- changed image naming
 
 ## 🐛 Bugs & TODO
 
@@ -144,6 +145,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 - ~~`-s, --siz` signed comparison~~ (v1.1.2)
 - ~~possible int overflow detected by security analysis~~ (v2)
 - ~~bad offset when cropping as circle or ellipse~~ (v2.1)
+- ~~bad image names from `(` for older OS~~ (v3.1)
 
 **todo** (first implementation version)
 
@@ -151,3 +153,4 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 - [x] thread pool (v1)
 - [x] basic size selection (v1)
 - [x] alter original crop with shape selection (v2)
+- [x] positive padding and target threshold (v3)
