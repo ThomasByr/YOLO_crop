@@ -181,6 +181,7 @@ App::App(int argc, char *argv[]) {
       break;
     case OPT_LOCK:
       _lock = true;
+      break;
     case OPT_RECT:
       _image_shape = ImageShape::rectangle;
       break;
@@ -293,7 +294,7 @@ void App::check_args() {
   if (_lock && _image_shape == ImageShape::undefined &&
       !_path_to_background_image.empty()) {
     print_help("locking cropping feature without any specific shape "
-               "will result in the background image not being used\n")
+               "will result in the background image not being used\n");
   }
 
   switch (get_img_type(_image_ext)) {
