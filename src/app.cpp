@@ -402,24 +402,22 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     bg_h = background_image->height();
   }
 
-  int _cls;
-  double _cx, _cy, _w, _h, _score;
-  int center_x, center_y, i, j, width, height, _width, _height, _r;
+  int _cls;      // the class id of the object
+  double _cx;    // the center x coordinate, in the range [0, 1]
+  double _cy;    // the center y coordinate, in the range [0, 1]
+  double _w;     // the width, in the range [0, 1]
+  double _h;     // the height, in the range [0, 1]
+  double _score; // the confidence of the object
 
-  // _cls is the class id
-  // _cx is the center x coordinate, in the range [0, 1]
-  // _cy is the center y coordinate, in the range [0, 1]
-  // _w is the width, in the range [0, 1]
-  // _h is the height, in the range [0, 1]
-
-  // center_x is the center x coordinate, in the range [0, w]
-  // center_y is the center y coordinate, in the range [0, h]
-  // i is the top-left x coordinate, in the range [0, w]
-  // j is the top-left y coordinate, in the range [0, h]
-  // width (either the desired width or the width of the object)
-  // height (same thing)
-  // _width is the width of the object, in the range [0, w]
-  // _height is the height of the object, in the range [0, h]
+  int center_x; // the center x coordinate, in the range [0, w]
+  int center_y; // the center y coordinate, in the range [0, w]
+  int i;        // the top-left x coordinate, in the range [0, w]
+  int j;        // the top-right x coordinate, in the range [0, w]
+  int width;    // width (either the desired one or the width of the object)
+  int height;   // height (either the desired one or the height of the object)
+  int _width;   // the width of the object, in the range [0, w]
+  int _height;  // he height of the object, in the range [0, h]
+  int _r;       // minimum radius of the object, in the range [0, w]
 
   // read cfg_file line by line
   while (std::getline(cfg_file, line)) { // boolean on conversion
@@ -448,7 +446,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
 
-    // continue if locking block cropping feature
+    // continue if locking blocks cropping feature
     if (lock) {
       if (center_x - width / 2 < 0 || center_x + width / 2 > w ||
           center_y - height / 2 < 0 || center_y + height / 2 > h) {
@@ -456,12 +454,14 @@ static ssize_t process(const struct process_args p_args /* copy */) {
       }
     }
 
+    // the base image (either blank or background image)
     Image *dest = nullptr;
     if (background_image != nullptr) {
       dest = background_image->crop_rect(bg_w / 2 - width / 2,
                                          bg_h / 2 - height / 2, width, height);
     }
 
+    // the cropped image (can use dest as a base)
     Image *subject = nullptr;
     // there might be a better way to do this...
     switch (image_shape) {
