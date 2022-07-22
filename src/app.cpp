@@ -57,6 +57,7 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
         "(defaults to no size restriction)\n"
      << "-p, --padd <>\t\tadd a little padding to the bounding box "
         "(defaults to 0)\n"
+     << "  , --lock\t\tdo not allow cropping outside of the original image\n"
      << "  , --squr\t\tuse square as an inside crop shape\n"
      << "  , --rect\t\tuse rectangle as an inside crop shape\n"
      << "  , --crcl\t\tuse circle as an inside crop shape\n"
@@ -128,6 +129,7 @@ App::App(int argc, char *argv[]) {
         {"thrds", required_argument, nullptr, 't'},
         {"size", required_argument, nullptr, 's'},
         {"padd", required_argument, nullptr, 'p'},
+        {"lock", no_argument, nullptr, OPT_LOCK},
         {"rect", no_argument, nullptr, OPT_RECT},
         {"squr", no_argument, nullptr, OPT_SQUR},
         {"crcl", no_argument, nullptr, OPT_CRCL},
@@ -171,6 +173,14 @@ App::App(int argc, char *argv[]) {
         panic("invalid argument for --siz from " + std::string(optarg));
       }
       break;
+    case 'p':
+      err = sscanf(optarg, "%d, %d", &_horizontal_padding, &_vertical_padding);
+      if (err == EOF) {
+        panic("invalid argument for --padd from " + std::string(optarg));
+      }
+      break;
+    case OPT_LOCK:
+      _lock = true;
     case OPT_RECT:
       _image_shape = ImageShape::rectangle;
       break;
@@ -196,12 +206,6 @@ App::App(int argc, char *argv[]) {
     case OPT_TRGT:
       _min_target_images = std::stol(optarg);
       _min_target_images_is_set = true;
-      break;
-    case 'p':
-      err = sscanf(optarg, "%d, %d", &_horizontal_padding, &_vertical_padding);
-      if (err == EOF) {
-        panic("invalid argument for --padd from " + std::string(optarg));
-      }
       break;
     case 'h':
       print_help();
@@ -286,6 +290,11 @@ void App::check_args() {
   if (_min_target_images_is_set && _min_target_images < 0) {
     print_help("please let target id be EOF by not setting --trgt manually\n");
   }
+  if (_lock && _image_shape == ImageShape::undefined &&
+      !_path_to_background_image.empty()) {
+    print_help("locking cropping feature without any specific shape "
+               "will result in the background image not being used\n")
+  }
 
   switch (get_img_type(_image_ext)) {
   case ImageType::unknown:
@@ -316,6 +325,7 @@ struct process_args {
   std::string img_path, cfg_path, out_path, img_name, img_ext;
   int min_object_size, max_object_size, target_width, target_height,
       horizontal_padding, vertical_padding, class_id;
+  bool lock;
   unsigned img_num;
   double min_confidence;
   ImageShape image_shape;
@@ -325,7 +335,7 @@ struct process_args {
       : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
         min_object_size(EOF), max_object_size(EOF), target_width(EOF),
         target_height(EOF), horizontal_padding(EOF), vertical_padding(EOF),
-        class_id(EOF), img_num(0), min_confidence(0.5),
+        class_id(EOF), lock(false),img_num(0), min_confidence(0.5),
         image_shape(ImageShape::undefined), background_image(nullptr) {}
 };
 
@@ -435,6 +445,8 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     height = target_height <= 0 ? _height : target_height;
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
+
+    // todo: continue if locking block cropping feature
 
     Image *dest = nullptr;
     if (background_image != nullptr) {
@@ -555,6 +567,7 @@ int App::run() {
   p_args.image_shape = _image_shape;
   p_args.horizontal_padding = _horizontal_padding;
   p_args.vertical_padding = _vertical_padding;
+  p_args.lock = _lock;
   p_args.class_id = _class_id;
   p_args.min_confidence = _min_confidence;
 
@@ -636,6 +649,7 @@ std::ostream &operator<<(std::ostream &os, const App &app) {
      << "target height: " << app._target_height << '\n'
      << "horizontal padding: " << app._horizontal_padding << '\n'
      << "vertical padding: " << app._vertical_padding << '\n'
+     << "locking crop feature: " << app._lock << '\n'
      << "custom crop shape: " << app._image_shape << '\n'
      << "path to background image: " << app._path_to_background_image << '\n'
      << "selected class id: " << app._class_id << '\n'

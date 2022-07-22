@@ -42,6 +42,9 @@ private:
   ssize_t _min_target_images = EOF;
   bool _min_target_images_is_set = false;
 
+  // locking cropping if target image is out
+  bool _lock = false;
+
   // minimum size of the object to be processed
   int _min_object_size = EOF;
   // maximum size of the object to be processed
