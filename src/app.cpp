@@ -336,7 +336,7 @@ struct process_args {
       : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
         min_object_size(EOF), max_object_size(EOF), target_width(EOF),
         target_height(EOF), horizontal_padding(EOF), vertical_padding(EOF),
-        class_id(EOF), lock(false),img_num(0), min_confidence(0.5),
+        class_id(EOF), lock(false), img_num(0), min_confidence(0.5),
         image_shape(ImageShape::undefined), background_image(nullptr) {}
 };
 
@@ -353,6 +353,7 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   const int horizontal_padding = p_args.horizontal_padding;
   const int vertical_padding = p_args.vertical_padding;
   const int class_id = p_args.class_id;
+  const bool lock = p_args.lock;
   const ImageShape image_shape = p_args.image_shape;
   const Image *background_image = p_args.background_image;
   const double min_confidence = p_args.min_confidence;
@@ -447,7 +448,13 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
 
-    // todo: continue if locking block cropping feature
+    // continue if locking block cropping feature
+    if (lock) {
+      if (center_x - width / 2 < 0 || center_x + width / 2 > w ||
+          center_y - height / 2 < 0 || center_y + height / 2 > h) {
+        continue;
+      }
+    }
 
     Image *dest = nullptr;
     if (background_image != nullptr) {
