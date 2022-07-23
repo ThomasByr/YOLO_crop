@@ -37,7 +37,7 @@ static void sig_handler(int signal) {
 
 static void print_help [[noreturn]] (const std::string &msg = "") {
   int status = msg.empty() ? EXIT_SUCCESS : EXIT_FAILURE;
-  if (!msg.empty()) log(msg, LogLevel::error);
+  if (!msg.empty()) log(msg + '\n', LogLevel::error);
 
   std::stringstream ss;
   ss << "YOLO_crop\n"
@@ -294,13 +294,32 @@ void App::check_args() {
   if (_lock && _image_shape == ImageShape::undefined &&
       !_path_to_background_image.empty()) {
     print_help("locking cropping feature without any specific shape "
-               "will result in the background image not being used\n");
+               "will result in the background image not being used\n"
+               "(--bg is useless here)\n");
+  }
+  if (_image_shape == ImageShape::rectangle && _target_width <= 0 &&
+      _target_height <= 0) {
+    print_help("target width and height should be > 0 "
+               "when using rectangle shape\n(--rect is useless here)\n");
+  }
+
+  switch (_image_shape) {
+  case ImageShape::undefined:
+  case ImageShape::rectangle:
+  case ImageShape::square:
+    if (_target_width <= 0 && _target_height <= 0 && _horizontal_padding <= 0 &&
+        _vertical_padding <= 0 && !_path_to_background_image.empty()) {
+      print_help("cropping without altering the image size will result in "
+                 "the background image not being used\n"
+                 "(--bg is useless here)\n");
+    }
+  default:
+    break;
   }
 
   switch (get_img_type(_image_ext)) {
   case ImageType::unknown:
     print_help("unrecognized image type extention\n");
-    break;
   default:
     break;
   }
@@ -308,7 +327,6 @@ void App::check_args() {
     switch (get_img_type(_path_to_background_image)) {
     case ImageType::unknown:
       print_help("unrecognized background image type\n");
-      break;
     default:
       break;
     }
