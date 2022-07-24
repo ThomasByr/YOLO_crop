@@ -377,27 +377,22 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   const double min_confidence = p_args.min_confidence;
   const unsigned img_num = p_args.img_num;
 
-  const int min_padding =
+  const int min_padding = // minimum padding if padding is set, otherwise 0
       std::min((horizontal_padding == EOF) ? 0 : horizontal_padding,
                (vertical_padding == EOF) ? 0 : vertical_padding);
-  const int max_padding =
+  const int max_padding = // maximum padding if padding is set, otherwise 0
       std::max((horizontal_padding == EOF) ? 0 : horizontal_padding,
                (vertical_padding == EOF) ? 0 : vertical_padding);
-  const int min_size =
+  const int min_size = // minimum object size if object size is set, otherwise 0
       (min_object_size == EOF) ? 0 : min_object_size + 2 * min_padding;
-  const int max_size =
+  const int max_size = // maximum object size if object size is set, otherwise 0
       (max_object_size == EOF) ? 0 : max_object_size + 2 * max_padding;
 
-  // img_path = "./data/test/test.png"
-  // cfg_path = "./data/test/test.json"
-  // out_path = "./data/test/"
-  // img_name = "test"
-  // img_ext  = ".png"
-
-  volatile ssize_t count = 0;
-  int status = EXIT_SUCCESS, err = 0;
-  int channel_force =
-      background_image != nullptr ? background_image->channels() : 0;
+  volatile ssize_t count = 0; // number correctly generated images
+  int status = EXIT_SUCCESS;  // status return code
+  int err = 0;                // error on sscanf
+  int channel_force =         // force channel to be set to this value
+      background_image == nullptr ? 0 : background_image->channels();
   const Image source = Image(img_path, channel_force);
 
   std::ifstream cfg_file;
@@ -407,17 +402,18 @@ static ssize_t process(const struct process_args p_args /* copy */) {
         LogLevel::error);
     status = EXIT_FAILURE;
   }
+
   // "class, x, y, width, height, confidence"
   static const char pattern[] = "%d %lf %lf %lf %lf %lf";
-  std::string line;
+  std::string line; // one line of the config file
 
-  const int w = source.width();
-  const int h = source.height();
+  const int w = source.width();  // width of the source image
+  const int h = source.height(); // height of the source image
 
   int bg_w = -1, bg_h = -1;
   if (background_image != nullptr) {
-    bg_w = background_image->width();
-    bg_h = background_image->height();
+    bg_w = background_image->width();  // width of the background image
+    bg_h = background_image->height(); // height of the background image
   }
 
   int _cls;      // the class id of the object
@@ -431,14 +427,14 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   int center_y; // the center y coordinate, in the range [0, w]
   int i;        // the top-left x coordinate, in the range [0, w]
   int j;        // the top-right x coordinate, in the range [0, w]
-  int width;    // width (either the desired one or the width of the object)
-  int height;   // height (either the desired one or the height of the object)
+  int width;    // width (the desired or the one of the object)
+  int height;   // height (the desired or the one of the object)
   int _width;   // the width of the object, in the range [0, w]
   int _height;  // he height of the object, in the range [0, h]
   int _r;       // minimum radius of the object, in the range [0, w]
 
   // read cfg_file line by line
-  while (std::getline(cfg_file, line)) { // boolean on conversion
+  while (std::getline(cfg_file, line) /* boolean on conversion */) {
 
     err = sscanf(line.c_str(), pattern, &_cls, &_cx, &_cy, &_w, &_h, &_score);
     if (err == EOF) break;
@@ -545,8 +541,8 @@ static ssize_t process(const struct process_args p_args /* copy */) {
       status = EXIT_FAILURE;
       log("could not close config file '" + cfg_path + img_name + ".txt'\n",
           LogLevel::error);
-    }
-  }
+    } // could not close the file
+  }   // if the file was open, close it
 
   if (status == EXIT_FAILURE) {
     // instead of returning the status and then loging the error
@@ -598,8 +594,12 @@ int App::run() {
   p_args.min_confidence = _min_confidence;
 
   if (_path_to_background_image.empty()) {
+    // if no background image is provided, use a blank image
+    // the blank image will be created in the crop method
     p_args.background_image = nullptr;
   } else {
+    // otherwise, load the background image
+    // create a common image for all images to use
     p_args.background_image = new Image(_path_to_background_image);
   }
 
@@ -621,7 +621,8 @@ int App::run() {
   }
 
   // wait for all threads to finish
-  idx = 0;
+
+  idx = 0; // don't forget to reset the index
   volatile unsigned progress = 0, last_progress = 0;
   const std::string desc = "Cutting Images" FG_WHT " \u2702 " RST;
   const std::string more = '[' + std::to_string(tp.size()) + ']';
