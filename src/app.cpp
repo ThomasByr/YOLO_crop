@@ -37,7 +37,7 @@ static void sig_handler(int signal) {
 
 static void print_help [[noreturn]] (const std::string &msg = "") {
   int status = msg.empty() ? EXIT_SUCCESS : EXIT_FAILURE;
-  if (!msg.empty()) log(msg, LogLevel::error);
+  if (!msg.empty()) log(msg + '\n', LogLevel::error);
 
   std::stringstream ss;
   ss << "YOLO_crop\n"
@@ -45,24 +45,30 @@ static void print_help [[noreturn]] (const std::string &msg = "") {
      << __VERSION_PATCH__ << "\n"
      << " author: " << __AUTHOR__ << "\n\n"
      << "  usage: YOLO_crop [OPTION]...\n"
-     << "-h, --help\t\t\tdisplay this help and exit\n"
-     << "-v, --version\t\t\tdisplay version and exit\n"
-     << "-l, --license\t\t\tdisplay license and exit\n"
-     << "-i, --in\t\t\tinput folder\n"
-     << "-o, --out\t\t\toutput folder\n"
-     << "-c, --cfg\t\t\tconfig folder (defaults to the input folder)\n"
-     << "-e, --ext\t\t\timage file extension (defaults to .png)\n"
-     << "-t, --thrds\t\t\tmax number of threads (defaults to 8)\n"
-     << "-s, --siz\t\t\tspecified size from \"min, max, w, h\" "
+     << "-h, --help\t\tdisplay this help and exit\n"
+     << "-v, --version\t\tdisplay version and exit\n"
+     << "-l, --license\t\tdisplay license and exit\n"
+     << "-i, --in <>\t\tinput folder\n"
+     << "-o, --out <>\t\toutput folder\n"
+     << "-c, --cfg <>\t\tconfig folder (defaults to the input folder)\n"
+     << "-e, --ext <>\t\timage file extension (defaults to .png)\n"
+     << "-t, --thrds <>\t\tmax number of threads (defaults to 8)\n"
+     << "-s, --size <>\t\tspecified size from \"min, max, w, h\" "
         "(defaults to no size restriction)\n"
-     << "  , --rect\t\t\tuse rectangle as an inside crop shape\n"
-     << "  , --squr\t\t\tuse square as an inside crop shape\n"
-     << "  , --crcl\t\t\tuse circle as an inside crop shape\n"
-     << "  , --llps\t\t\tuse ellipse as an inside crop shape\n"
-     << "-b, --bg\t\t\tbackground image (defaults to none)\n"
-     << "  , --clss\t\t\tonly look for the specified class (defaults to all)\n"
-     << "  , --cnfd\t\t\tspecify a minimum confidence threshold "
-        "(defaults to .5)\n";
+     << "-p, --padd <>\t\tadd a little padding to the bounding box "
+        "(defaults to 0)\n"
+     << "  , --lock\t\tdo not allow cropping outside of the original image\n"
+     << "  , --squr\t\tuse square as an inside crop shape\n"
+     << "  , --rect\t\tuse rectangle as an inside crop shape\n"
+     << "  , --crcl\t\tuse circle as an inside crop shape\n"
+     << "  , --llps\t\tuse ellipse as an inside crop shape\n"
+     << "-b, --bg <>\t\tbackground image (defaults to none)\n"
+     << "  , --clss <>\t\tonly look for the specified class (defaults to "
+        "all)\n"
+     << "  , --cnfd <>\t\tspecify a minimum confidence threshold "
+        "(defaults to .5)\n"
+     << "  ,--trgt <>\t\ttarget minimum number of images to generate "
+        "(defaults to no restriction)\n";
 
   std::cout << ss.str() << std::flush;
   std::exit(status);
@@ -121,7 +127,9 @@ App::App(int argc, char *argv[]) {
         {"cfg", required_argument, nullptr, 'c'},
         {"ext", required_argument, nullptr, 'e'},
         {"thrds", required_argument, nullptr, 't'},
-        {"siz", required_argument, nullptr, 's'},
+        {"size", required_argument, nullptr, 's'},
+        {"padd", required_argument, nullptr, 'p'},
+        {"lock", no_argument, nullptr, OPT_LOCK},
         {"rect", no_argument, nullptr, OPT_RECT},
         {"squr", no_argument, nullptr, OPT_SQUR},
         {"crcl", no_argument, nullptr, OPT_CRCL},
@@ -129,10 +137,12 @@ App::App(int argc, char *argv[]) {
         {"bg", required_argument, nullptr, 'b'},
         {"clss", required_argument, nullptr, OPT_CLSS},
         {"cnfd", required_argument, nullptr, OPT_CNFD},
+        {"trgt", required_argument, nullptr, OPT_TRGT},
+        {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'v'},
         {"license", no_argument, nullptr, 'l'}, {nullptr, 0, nullptr, 0},
   };
-  static const char *short_options = "i:o:c:e:t:s:b:hvl";
+  static const char *short_options = "i:o:c:e:t:s:b:p:hvl";
 
   std::string bad_opt;
   std::stringstream ss;
@@ -163,17 +173,30 @@ App::App(int argc, char *argv[]) {
         panic("invalid argument for --siz from " + std::string(optarg));
       }
       break;
+    case 'p':
+      err = sscanf(optarg, "%d, %d", &_horizontal_padding, &_vertical_padding);
+      if (err == EOF) {
+        panic("invalid argument for --padd from " + std::string(optarg));
+      }
+      break;
+    case OPT_LOCK:
+      _lock = true;
+      break;
     case OPT_RECT:
       _image_shape = ImageShape::rectangle;
+      _set_shape_count++;
       break;
     case OPT_SQUR:
       _image_shape = ImageShape::square;
+      _set_shape_count++;
       break;
     case OPT_CRCL:
       _image_shape = ImageShape::circle;
+      _set_shape_count++;
       break;
     case OPT_LLPS:
       _image_shape = ImageShape::ellipse;
+      _set_shape_count++;
       break;
     case 'b':
       _path_to_background_image = optarg;
@@ -184,6 +207,10 @@ App::App(int argc, char *argv[]) {
       break;
     case OPT_CNFD:
       _min_confidence = std::stod(optarg);
+      break;
+    case OPT_TRGT:
+      _min_target_images = std::stol(optarg);
+      _min_target_images_is_set = true;
       break;
     case 'h':
       print_help();
@@ -237,7 +264,7 @@ void App::check_args() {
   if (_max_object_size != EOF && _max_object_size < 0) {
     print_help("maximum object size must be >= 0\n");
   }
-  if (_min_object_size < 0 && _max_object_size < 0 &&
+  if (_min_object_size > 0 && _max_object_size > 0 &&
       _min_object_size > _max_object_size) {
     print_help("minimum object size must be <= maximum object size\n");
   }
@@ -247,17 +274,59 @@ void App::check_args() {
   if (_target_height != EOF && _target_height < 0) {
     print_help("target height must be >= 0\n");
   }
+  if (_horizontal_padding > 0 && _vertical_padding == EOF) {
+    _vertical_padding = _horizontal_padding;
+  }
+  if (_horizontal_padding == EOF && _vertical_padding > 0) {
+    _horizontal_padding = _vertical_padding;
+  }
+  if (_horizontal_padding != EOF && _horizontal_padding < 0) {
+    print_help("horizontal padding must be >= 0\n");
+  }
+  if (_vertical_padding != EOF && _vertical_padding < 0) {
+    print_help("vertical padding must be >= 0\n");
+  }
   if (_min_confidence < 0 || _min_confidence > 1) {
     print_help("minimum confidence must be between 0 and 1\n");
   }
   if (_class_id_is_set && _class_id < 0) {
     print_help("please let class id be EOF by not setting --clss manually\n");
   }
+  if (_min_target_images_is_set && _min_target_images < 0) {
+    print_help("please let target id be EOF by not setting --trgt manually\n");
+  }
+
+  if (_lock && _image_shape == ImageShape::undefined &&
+      !_path_to_background_image.empty()) {
+    print_help("locking cropping feature without any specific shape "
+               "will result in the background image not being used\n"
+               "(--bg is useless here)\n");
+  }
+  if (_image_shape == ImageShape::rectangle && _target_width <= 0 &&
+      _target_height <= 0) {
+    print_help("target width and height should be > 0 "
+               "when using rectangle shape\n(--rect is useless here)\n");
+  }
+  switch (_image_shape) {
+  case ImageShape::undefined:
+  case ImageShape::rectangle:
+  case ImageShape::square:
+    if (_target_width <= 0 && _target_height <= 0 && _horizontal_padding <= 0 &&
+        _vertical_padding <= 0 && !_path_to_background_image.empty()) {
+      print_help("cropping without altering the image size will result in "
+                 "the background image not being used\n"
+                 "(--bg is useless here)\n");
+    }
+  default:
+    break;
+  }
+  if (_set_shape_count > 1) {
+    print_help("specifying more than one crop shape is not allowed\n");
+  }
 
   switch (get_img_type(_image_ext)) {
   case ImageType::unknown:
     print_help("unrecognized image type extention\n");
-    break;
   default:
     break;
   }
@@ -265,7 +334,6 @@ void App::check_args() {
     switch (get_img_type(_path_to_background_image)) {
     case ImageType::unknown:
       print_help("unrecognized background image type\n");
-      break;
     default:
       break;
     }
@@ -281,7 +349,10 @@ void create_dir(const std::string &path) {
 /// @brief holds the necessary information for a single image
 struct process_args {
   std::string img_path, cfg_path, out_path, img_name, img_ext;
-  int min_object_size, max_object_size, target_width, target_height, class_id;
+  int min_object_size, max_object_size, target_width, target_height,
+      horizontal_padding, vertical_padding, class_id;
+  bool lock;
+  unsigned img_num;
   double min_confidence;
   ImageShape image_shape;
   Image *background_image;
@@ -289,7 +360,8 @@ struct process_args {
   process_args()
       : img_path(""), cfg_path(""), out_path(""), img_name(""), img_ext(""),
         min_object_size(EOF), max_object_size(EOF), target_width(EOF),
-        target_height(EOF), class_id(EOF), min_confidence(0.5),
+        target_height(EOF), horizontal_padding(EOF), vertical_padding(EOF),
+        class_id(EOF), lock(false), img_num(0), min_confidence(0.5),
         image_shape(ImageShape::undefined), background_image(nullptr) {}
 };
 
@@ -303,21 +375,31 @@ static ssize_t process(const struct process_args p_args /* copy */) {
   const int max_object_size = p_args.max_object_size;
   const int target_width = p_args.target_width;
   const int target_height = p_args.target_height;
+  const int horizontal_padding = p_args.horizontal_padding;
+  const int vertical_padding = p_args.vertical_padding;
   const int class_id = p_args.class_id;
+  const bool lock = p_args.lock;
   const ImageShape image_shape = p_args.image_shape;
   const Image *background_image = p_args.background_image;
-  double min_confidence = p_args.min_confidence;
+  const double min_confidence = p_args.min_confidence;
+  const unsigned img_num = p_args.img_num;
 
-  // img_path = "./data/test/test.png"
-  // cfg_path = "./data/test/test.json"
-  // out_path = "./data/test/"
-  // img_name = "test"
-  // img_ext  = ".png"
+  const int min_padding = // minimum padding if padding is set, otherwise 0
+      std::min((horizontal_padding == EOF) ? 0 : horizontal_padding,
+               (vertical_padding == EOF) ? 0 : vertical_padding);
+  const int max_padding = // maximum padding if padding is set, otherwise 0
+      std::max((horizontal_padding == EOF) ? 0 : horizontal_padding,
+               (vertical_padding == EOF) ? 0 : vertical_padding);
+  const int min_size = // minimum object size if object size is set, otherwise 0
+      (min_object_size == EOF) ? 0 : min_object_size + 2 * min_padding;
+  const int max_size = // maximum object size if object size is set, otherwise 0
+      (max_object_size == EOF) ? 0 : max_object_size + 2 * max_padding;
 
-  ssize_t count = 0;
-  int status = EXIT_SUCCESS, err = 0;
-  int channel_force =
-      background_image != nullptr ? background_image->channels() : 0;
+  volatile ssize_t count = 0; // number correctly generated images
+  int status = EXIT_SUCCESS;  // status return code
+  int err = 0;                // error on sscanf
+  int channel_force =         // force channel to be set to this value
+      background_image == nullptr ? 0 : background_image->channels();
   const Image source = Image(img_path, channel_force);
 
   std::ifstream cfg_file;
@@ -327,40 +409,39 @@ static ssize_t process(const struct process_args p_args /* copy */) {
         LogLevel::error);
     status = EXIT_FAILURE;
   }
+
   // "class, x, y, width, height, confidence"
   static const char pattern[] = "%d %lf %lf %lf %lf %lf";
-  std::string line;
+  std::string line; // one line of the config file
 
-  const int w = source.width();
-  const int h = source.height();
+  const int w = source.width();  // width of the source image
+  const int h = source.height(); // height of the source image
 
   int bg_w = -1, bg_h = -1;
   if (background_image != nullptr) {
-    bg_w = background_image->width();
-    bg_h = background_image->height();
+    bg_w = background_image->width();  // width of the background image
+    bg_h = background_image->height(); // height of the background image
   }
 
-  int _cls;
-  double _cx, _cy, _w, _h, _score;
-  int center_x, center_y, i, j, width, height, _width, _height, _r;
+  int _cls;      // the class id of the object
+  double _cx;    // the center x coordinate, in the range [0, 1]
+  double _cy;    // the center y coordinate, in the range [0, 1]
+  double _w;     // the width, in the range [0, 1]
+  double _h;     // the height, in the range [0, 1]
+  double _score; // the confidence of the object
 
-  // _cls is the class id
-  // _cx is the center x coordinate, in the range [0, 1]
-  // _cy is the center y coordinate, in the range [0, 1]
-  // _w is the width, in the range [0, 1]
-  // _h is the height, in the range [0, 1]
-
-  // center_x is the center x coordinate, in the range [0, w]
-  // center_y is the center y coordinate, in the range [0, h]
-  // i is the top-left x coordinate, in the range [0, w]
-  // j is the top-left y coordinate, in the range [0, h]
-  // width (either the desired width or the width of the object)
-  // height (same thing)
-  // _width is the width of the object, in the range [0, w]
-  // _height is the height of the object, in the range [0, h]
+  int center_x; // the center x coordinate, in the range [0, w]
+  int center_y; // the center y coordinate, in the range [0, w]
+  int i;        // the top-left x coordinate, in the range [0, w]
+  int j;        // the top-right x coordinate, in the range [0, w]
+  int width;    // width (the desired or the one of the object)
+  int height;   // height (the desired or the one of the object)
+  int _width;   // the width of the object, in the range [0, w]
+  int _height;  // he height of the object, in the range [0, h]
+  int _r;       // minimum radius of the object, in the range [0, w]
 
   // read cfg_file line by line
-  while (std::getline(cfg_file, line)) { // boolean on conversion
+  while (std::getline(cfg_file, line) /* boolean on conversion */) {
 
     err = sscanf(line.c_str(), pattern, &_cls, &_cx, &_cy, &_w, &_h, &_score);
     if (err == EOF) break;
@@ -368,14 +449,16 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     if (class_id != EOF && _cls != class_id) continue;
     if (_score < min_confidence) continue;
 
-    _width = round_to_int(lerp(0, w, _w));
-    _height = round_to_int(lerp(0, h, _h));
+    _width = round_to_int(lerp(0, w, _w)) +
+             (horizontal_padding == EOF ? 0 : horizontal_padding * 2);
+    _height = round_to_int(lerp(0, h, _h)) +
+              (vertical_padding == EOF ? 0 : vertical_padding * 2);
     _r = std::min(_width, _height);
 
-    if (min_object_size > 0 && min_object_size > std::min(_width, _height)) {
+    if (min_object_size > 0 && min_size > std::min(_width, _height)) {
       continue;
     }
-    if (max_object_size > 0 && max_object_size < std::max(_width, _height)) {
+    if (max_object_size > 0 && max_size < std::max(_width, _height)) {
       continue;
     }
 
@@ -384,12 +467,22 @@ static ssize_t process(const struct process_args p_args /* copy */) {
     center_x = round_to_int(lerp(0, w, _cx));
     center_y = round_to_int(lerp(0, h, _cy));
 
+    // continue if locking blocks cropping feature
+    if (lock) {
+      if (center_x - width / 2 < 0 || center_x + width / 2 > w ||
+          center_y - height / 2 < 0 || center_y + height / 2 > h) {
+        continue;
+      }
+    }
+
+    // the base image (either blank or background image)
     Image *dest = nullptr;
     if (background_image != nullptr) {
       dest = background_image->crop_rect(bg_w / 2 - width / 2,
                                          bg_h / 2 - height / 2, width, height);
     }
 
+    // the cropped image (can use dest as a base)
     Image *subject = nullptr;
     // there might be a better way to do this...
     switch (image_shape) {
@@ -431,9 +524,9 @@ static ssize_t process(const struct process_args p_args /* copy */) {
 
     // save the image
     const std::string subject_name =
-        out_path + img_name + '(' + std::to_string(_cls) + ')' +
-        std::to_string(center_x) + '_' + std::to_string(center_y) + '[' +
-        std::to_string(count) + ']' + img_ext;
+        out_path + img_name + '_' + std::to_string(_cls) + '_' +
+        std::to_string(center_x) + '_' + std::to_string(center_y) + '_' +
+        std::to_string(count) + '_' + std::to_string(img_num) + img_ext;
     if (!subject->write(subject_name)) {
       status = EXIT_FAILURE;
       log("could not write image '" + subject_name + "'\n", LogLevel::error);
@@ -455,8 +548,8 @@ static ssize_t process(const struct process_args p_args /* copy */) {
       status = EXIT_FAILURE;
       log("could not close config file '" + cfg_path + img_name + ".txt'\n",
           LogLevel::error);
-    }
-  }
+    } // could not close the file
+  }   // if the file was open, close it
 
   if (status == EXIT_FAILURE) {
     // instead of returning the status and then loging the error
@@ -482,7 +575,10 @@ int App::run() {
   const unsigned n = imgs_files.size();
   unsigned idx = 0;
 
-  log("found " + std::to_string(n) + " images\n", LogLevel::info);
+  // figure out if we need a 's' at "image(s)"
+  const char sf = n > 1u ? 's' : ' ';
+
+  log("found " + std::to_string(n) + " image" + sf + '\n', LogLevel::info);
 
   // thread pool
   thread_pool tp(_max_threads);
@@ -498,12 +594,19 @@ int App::run() {
   p_args.target_width = _target_width;
   p_args.target_height = _target_height;
   p_args.image_shape = _image_shape;
+  p_args.horizontal_padding = _horizontal_padding;
+  p_args.vertical_padding = _vertical_padding;
+  p_args.lock = _lock;
   p_args.class_id = _class_id;
   p_args.min_confidence = _min_confidence;
 
   if (_path_to_background_image.empty()) {
+    // if no background image is provided, use a blank image
+    // the blank image will be created in the crop method
     p_args.background_image = nullptr;
   } else {
+    // otherwise, load the background image
+    // create a common image for all images to use
     p_args.background_image = new Image(_path_to_background_image);
   }
 
@@ -514,6 +617,8 @@ int App::run() {
 
     // some image specific parameters
 
+    p_args.img_num = idx;
+
     p_args.img_name = img_name_no_ext;
     p_args.img_path = _path_to_input_folder + '/' + img_name;
     p_args.cfg_path = _path_to_config_folder + '/';
@@ -523,14 +628,17 @@ int App::run() {
   }
 
   // wait for all threads to finish
-  idx = 0;
+
+  idx = 0; // don't forget to reset the index
   volatile unsigned progress = 0, last_progress = 0;
   const std::string desc = "Cutting Images" FG_WHT " \u2702 " RST;
   const std::string more = '[' + std::to_string(tp.size()) + ']';
 
-  ssize_t count = 0; // number of images processed
+  volatile ssize_t count = 0;              // number of images processed
+  const ssize_t trgt = _min_target_images; // target number of images
   for (auto &f : futures) {
     count += f.get();
+    if (trgt != EOF && count > 0 && count >= trgt) break;
 
     progress = (++idx * 100) / n;
     if (progress > last_progress) {
@@ -548,7 +656,16 @@ int App::run() {
   if (p_args.background_image != nullptr) {
     delete p_args.background_image;
   }
-  log("created " + std::to_string(count) + " images\n", LogLevel::info);
+
+  // figure out if we need a 's' at "image(s)"
+  const char sc = count > 1l ? 's' : ' ';
+  log("created " + std::to_string(count) + " image" + sc + '\n',
+      LogLevel::info);
+
+  // if the number of generated images is less than the target number
+  if (count < trgt) {
+    log("could not create enough images\n", LogLevel::warning);
+  }
 
   return EXIT_SUCCESS;
 }
@@ -564,10 +681,14 @@ std::ostream &operator<<(std::ostream &os, const App &app) {
      << "maximum object size: " << app._max_object_size << '\n'
      << "target width: " << app._target_width << '\n'
      << "target height: " << app._target_height << '\n'
+     << "horizontal padding: " << app._horizontal_padding << '\n'
+     << "vertical padding: " << app._vertical_padding << '\n'
+     << "locking crop feature: " << app._lock << '\n'
      << "custom crop shape: " << app._image_shape << '\n'
      << "path to background image: " << app._path_to_background_image << '\n'
      << "selected class id: " << app._class_id << '\n'
-     << "minimum confidence score: " << app._min_confidence << '\n';
+     << "minimum confidence score: " << app._min_confidence << '\n'
+     << "target minimum number of images: " << app._min_target_images << '\n';
 
   return os;
 }

@@ -22,6 +22,7 @@ private:
 
   // image shape to crop to
   ImageShape _image_shape = ImageShape::undefined;
+  unsigned _set_shape_count = 0;
 
   // path to the background image to use for cropping
   std::string _path_to_background_image;
@@ -32,6 +33,18 @@ private:
   // class id to use for detection
   int _class_id = EOF;
   bool _class_id_is_set = false;
+
+  // horizontal padding to the bounding box
+  int _horizontal_padding = EOF;
+  // vertical padding to the bounding box
+  int _vertical_padding = EOF;
+
+  // minimum target number of images to generate
+  ssize_t _min_target_images = EOF;
+  bool _min_target_images_is_set = false;
+
+  // locking cropping if target image is out
+  bool _lock = false;
 
   // minimum size of the object to be processed
   int _min_object_size = EOF;
@@ -67,5 +80,10 @@ public:
    */
   friend std::ostream &operator<<(std::ostream &os, const App &app);
 
+  /**
+   * @brief run the application
+   * @note *this.check_args() must be called before calling this function
+   *
+   */
   int run();
 };
