@@ -184,15 +184,19 @@ App::App(int argc, char *argv[]) {
       break;
     case OPT_RECT:
       _image_shape = ImageShape::rectangle;
+      _set_shape_count++;
       break;
     case OPT_SQUR:
       _image_shape = ImageShape::square;
+      _set_shape_count++;
       break;
     case OPT_CRCL:
       _image_shape = ImageShape::circle;
+      _set_shape_count++;
       break;
     case OPT_LLPS:
       _image_shape = ImageShape::ellipse;
+      _set_shape_count++;
       break;
     case 'b':
       _path_to_background_image = optarg;
@@ -291,6 +295,7 @@ void App::check_args() {
   if (_min_target_images_is_set && _min_target_images < 0) {
     print_help("please let target id be EOF by not setting --trgt manually\n");
   }
+
   if (_lock && _image_shape == ImageShape::undefined &&
       !_path_to_background_image.empty()) {
     print_help("locking cropping feature without any specific shape "
@@ -302,7 +307,6 @@ void App::check_args() {
     print_help("target width and height should be > 0 "
                "when using rectangle shape\n(--rect is useless here)\n");
   }
-
   switch (_image_shape) {
   case ImageShape::undefined:
   case ImageShape::rectangle:
@@ -315,6 +319,9 @@ void App::check_args() {
     }
   default:
     break;
+  }
+  if (_set_shape_count > 1) {
+    print_help("specifying more than one crop shape is not allowed\n");
   }
 
   switch (get_img_type(_image_ext)) {

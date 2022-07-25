@@ -22,6 +22,7 @@ private:
 
   // image shape to crop to
   ImageShape _image_shape = ImageShape::undefined;
+  unsigned _set_shape_count = 0;
 
   // path to the background image to use for cropping
   std::string _path_to_background_image;
@@ -79,5 +80,10 @@ public:
    */
   friend std::ostream &operator<<(std::ostream &os, const App &app);
 
+  /**
+   * @brief run the application
+   * @note *this.check_args() must be called before calling this function
+   *
+   */
   int run();
 };
