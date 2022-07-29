@@ -24,11 +24,11 @@
 > **Note**
 > This repository contains very specific instructions for some un-related codebase. That being said, the present code should be as generic as possible for you to tweak it to your likings without any issues, _hopefully_.
 
-Please make sure you do run a recent enough version of Linux, `g++ >= 4.8.5 w/ CentOS 7` should be enough though, with possible non-broken links to **posix threads** and all **gnu standard** extensions. This program uses the flag `-std=gnu++11` to compile.
+Please make sure you do run a recent enough version of Linux, `g++ >= 4.8.5 w/ CentOS 7` should be enough though, with necessary non-broken links to **posix threads** and all **gnu standard** extensions. This program uses the flag `-std=gnu++11` to compile.
 
 This program takes images as input, as well as a config file, which are basically rectangles outputs from YOLO (which is a shape detection neural network). It then loop through all objects in the config file, optionally ignoring those whose size isn't in a specific range, and create new images cropping the original one.
 
-All units of mesurement (excluding internal representation and the config text file) are relative to the pixel array.
+All units of mesurement (excluding those in the config text file and some internal representations of course) are relative to the pixel array.
 
 Compile a release version of the program with :
 
@@ -40,31 +40,33 @@ The produced executable binary is to be found inside of the `bin` folder.
 
 ## 💁 More infos and Usage
 
-The program takes command line arguments from (`..` indicating no short option and `<>` that an argument is required) :
+The program takes command line arguments from (`..` indicating no short option, `<>` that an argument is required and `*` mutual incompatibility) :
 
-- `-h, --help` : display this help and exit
-- `-v, --version` : display version and exit
-- `-l, --license` : display license and exit
-- `-i, --in <>` : input folder
-- `-o, --out <>` : output folder
-- `-c, --cfg <>` : config folder (defaults to the input folder)
-- `-e, --ext <>` : image file extension (defaults to .png)
-- `-t, --thrds <>` : max number of threads (defaults to 8)
-- `-s, --size <>` : specific size of the objects (defaults to no size restriction)
-- `-p, --padd <>` : add a little padding to the bounding box (defaults to 0)
-- `.., --lock` : do not allow cropping outside of the original image
-- `.., --squr` : use square as an inside crop shape
-- `.., --rect` : use rectangle a an insides crop shape
-- `.., --crcl` : use circle as an inside crop shape
-- `.., --llps` : use ellipse as an inside crop shape
-- `-b, --bg <>` : background image (defaults to none)
-- `.., --clss <>` : only look for the specified class (defaults to all)
-- `.., --cnfd <>` : specify a minimum confidence threshold (defaults to .5)
-- `.., --trgt <>` : target minimum number of images to generate (defaults to no restriction)
+| command            | hint                                                | required ? | default        |
+| ------------------ | --------------------------------------------------- | ---------- | -------------- |
+| `-h, --help`       | display this help and **exit**                      | ❔         |                |
+| `-v, --version`    | display version and **exit**                        | ❔         |                |
+| `-l, --license`    | display license and **exit**                        | ❔         |                |
+| `-i, --in` `<>`    | path to input folder                                | ✔️         |                |
+| `-o, --out` `<>`   | path to output folder                               | ✔️         |                |
+| `-c, --cfg` `<>`   | path to config folder                               | ❌         | input folder   |
+| `-e, --ext` `<>`   | image file extension                                | ❌         | `.png`         |
+| `-t, --thrds` `<>` | max number of threads                               | ❌         | `8`            |
+| `-s, --size` `<>`  | specific size of the objects                        | ❌         | `0,0,0`        |
+| `-p, --padd` `<>`  | add a little padding to the bounding box            | ❌         | `0`            |
+| `.., --lock`       | do not allow cropping outside of the original image | ❌         |                |
+| `.., --squr` `*`   | use square as an inside crop shape                  | ❌         |                |
+| `.., --rect` `*`   | use rectangle a an insides crop shape               | ❌         |                |
+| `.., --crcl` `*`   | use circle as an inside crop shape                  | ❌         |                |
+| `.., --llps` `*`   | use ellipse as an inside crop shape                 | ❌         |                |
+| `-b, --bg` `<>`    | path to background image                            | ❌         | none           |
+| `.., --clss` `<>`  | only look for the specified class                   | ❌         | all            |
+| `.., --cnfd` `<>`  | specify a minimum confidence threshold              | ❌         | `.5`           |
+| `.., --trgt` `<>`  | target minimum number of images to generate         | ❌         | no restriction |
 
-The specific size input should match the following pattern : `"min, max, w, h"`, which will result in the following behavior. The program will only crop around objects whose minimum size (the minimum between the width and the height of the rectangle defined by YOLO) is greater than or equal to `min`, and maximum size (same thing) is less than or equal to `max`. It will then crop the objects around their center with a new rectangle of width `w` and height `h`. If both `w` and `h` are unspecified, the new rectangle's dimensions will match the one defined by YOLO. If there only the first value is specified (only `w` is specified), the program will crop according to the square of width `w`. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
+The specific size input should match the following pattern : `"min, max, w, h"`, which will result in the following behavior. The program will only crop around objects whose minimum size (the minimum between the width and the height of the rectangle defined by YOLO) is greater than or equal to `min`, and maximum size (same thing) is less than or equal to `max`. It will then crop the objects around their center with a new rectangle of width `w` and height `h`. If both `w` and `h` are unspecified, the new rectangle's dimensions will match the one defined by YOLO. If only the first value is specified (only `w` is specified), the program will crop according to the square of width `w`. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined.
 
-Additionally, since v2, you can crop in a variety of new ways. At the time of writing, you can choose between `rectangle`, `square`, `circle` and `ellipse`. All previous four shapes only apply to the bounding box defined by YOLO. It works as follow : if you do not specify any shape and force the cropped size, the program will crop the original image with that size, around the center point defined by the bounding box. Then if you do specify any shape, it will crop according to that shape whose dimensions are defined by the **outer rectangle** bounding box. It is up to you to force the dimension of the final image, which, if you choose from either circle or ellipse, is guarantied to have rounded black corners. This you can avoid by specifying a path to a background default image (this argument will only eliminate dark edges when cropping outside of the original image when used with no specific shape). Note that the background image locks the number of channels used for image processing. The program will first crop the background image to the desired size (either the one you chose or the one defined by the bounding box) at the center of the background image, and then copy the YOLO-recognized subject above it, according to the shape. No checks are performed regarding the size of the background image, you might want to supply one large enough.
+Additionally, since v2, you can crop in a variety of new ways. At the time of writing, you can choose between `rectangle`, `square`, `circle` and `ellipse`. All previous four shapes only apply to the bounding box defined by YOLO. It works as follow : if you do not specify any shape and force the crop size, the program will crop the original image with that size, around the center point defined by the bounding box. Then if you do specify any shape, it will crop according to that shape whose dimensions are defined by the **outer rectangle** bounding box. It is up to you to force the dimension of the final image, which, if you choose from either circle or ellipse, is guarantied to have rounded black corners. This you can avoid by specifying a path to a background default image (this argument will only eliminate dark edges when cropping outside of the original image when used with no specific shape). Note that the background image locks the number of channels used for image processing. The program will first crop the background image to the desired size (either the one you chose or the one defined by the bounding box) at the center of the background image, and then copy the YOLO-recognized subject above it, according to the shape. No checks are performed regarding the size of the background image, you might want to supply one large enough.
 
 In v3, I added optional additional positive padding to the bounding box. It works as the size, the pattern is `"horizontal, vertical"` ; and, if only one value is supplied, the vertical padding will equal the horizontal automatically. Horizontal padding actually represents left and right padding, so setting it to 1 will add a left and right padding of 1 ; the same applies to vertical padding. To force only one of the two dimensions, please set one to zero ; setting values to your system's `EOF` will let them undefined. In addition, you can specify a minimum amount of images to generate using `--trgt`. The program will terminate immediately after that threshold (this can be useful for debugging with a small amount of images). Setting this to zero will result in only one valid source image to be cropped. Locking images with `--lock` won't allow for cropping unless the **full** cropped result fits perfectly inside of the source image (leaving no blank borders).
 
@@ -74,10 +76,10 @@ So, a legal launching instruction could be :
 ./bin/YOLO_crop -i orig -o dest -e .jpg -t 4 -s 30,60,64 --llps -b orig/bg.png
 ```
 
-Just in case, this will tell the program to take all files with the `.jpg` extension in the folder named `orig`, where there is also matching named `.txt` files for the config, look only for objects whose minimum size is bigger than `30` and maximum size is less than `60`, and crop according to the `ellipse` defined by that bounding box. The program will then crop the `orig/bg.png` at the center point to create a new `64x64` image for it to then paste the cropped ellipse in the middle. It will then save it inside the folder named `dest` using the `.jpg` format.
+Just in case, this will tell the program to take all files with the `.jpg` extension in the folder named `orig`, where there is also matching named `.txt` files for the config, look only for objects whose minimum bounding box size is bigger than `30` and maximum size is less than `60`, and crop according to the `ellipse` defined by that bounding box. The program will then crop the `orig/bg.png` at the center point to create a new `64x64` image for it to then paste the cropped ellipse in the middle. It will then save it inside the folder named `dest` using the `.jpg` format.
 
 > **Warning**
-> Please be thoughtfull when naming/generating images/config files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt` in the config folder.
+> Please be thoughtfull when naming/generating config/images files. We assume each image in the input folder named `x.ext` will have a matching twin text file named `x.txt` in the config folder.
 
 Here is the current structure of the config text file that we assume you are using (**without** the first heading line) :
 
@@ -86,7 +88,7 @@ class_id center_x center_y width    height    confidence_score
 0        0.085143 0.38912  0.002182 0.0027172 0.9954308
 ```
 
-Note that only `class_id` field is parsed as an int, and all others are doubles. A friendly reminder that here we use relative coordinates (meaning all doubles are in the range `[0, 1]`).
+Note that only `class_id` field is parsed as an int, and all others are doubles. A friendly reminder that we use relative coordinates (meaning all doubles are in the range `[0, 1]`).
 
 ## 🧪 Testing
 
@@ -112,27 +114,27 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ## 🔄 Changelog
 
-> For obvious reasons, some feature were not reported here and have been remove from git entirely.
+> For _obvious_ reasons, some feature were not reported here and have been remove from git entirely.
 
-`v0` - basic crop
+`v0` | basic crop
 
 - we cropped images using a fixed sized rectangle
 - use of OpenCV
 
-`v1` - home-made image processing wizardry
+`v1` | home-made image processing wizardry
 
 - grabbed stb_image code headers
 - cpp thread pool implementation using thread, future and mutex system calls
 - implemented basic size selection
 
-`v2` - cropping shapes
+`v2` | cropping shapes
 
 - choosing from square, rectangle, circle and ellipse
 - static type cast
 - shared pointers for default background and improved performances
 - class and confidence extra selection
 
-`v3` - final revision
+`v3` | definitive edition
 
 - option to add a little padding horizontally or vertically
 - command line issue fix
@@ -155,4 +157,4 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 - [x] basic size selection (v1)
 - [x] alter original crop with shape selection (v2)
 - [x] positive padding and target threshold (v3)
-- [x] do not crop if image is out (3.1)
+- [x] do not crop if target is out (3.1)
